@@ -54,7 +54,7 @@ public class Server implements ServerInterface{
     public Server(){
 
     }
-
+/////////
     public static void main(String[] args) {
 
         clientNonces = new ArrayList<>();
