@@ -70,11 +70,7 @@ public class Server implements ServerInterface{
             System.setProperty("java.rmi.server.hostname", ip);
             Registry registry = LocateRegistry.createRegistry(Integer.parseInt(args[0]));
             registry.bind("Server", stub);
-
-            //FileInputStream fin = new FileInputStream(certFile);
-            //CertificateFactory f = CertificateFactory.getInstance("X.509");
-            //X509Certificate certificate = (X509Certificate)f.generateCertificate(fin);
-            //ServerPublicKey = certificate.getPublicKey();
+            
 
             FileInputStream fis = new FileInputStream(KeyStoreFile);
             KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
