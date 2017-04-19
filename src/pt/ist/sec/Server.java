@@ -37,6 +37,7 @@ public class Server implements ServerInterface{
 
     private static String DataFileLoc = System.getProperty("user.dir") + "/data/storage.txt";
     private static String LogFile = System.getProperty("user.dir") + "/log/log.txt";
+    private static String SignFile = System.getProperty("user.dir") + "/log/signatures.txt";
     private static String RegFile = System.getProperty("user.dir") + "/data/register.txt";
     private static String byteFile = System.getProperty("user.dir") + "/data/byteFile";
 
@@ -86,11 +87,67 @@ public class Server implements ServerInterface{
         fileCreation(LogFile);
         fileCreation(RegFile);
         fileCreation(byteFile);
+        fileCreation(SignFile);
 
 
         while(true);
     }
 
+    private void storageSignture(ClientClass client, byte[] signature){
+
+        String pubKey = printBase64Binary(client.getPublicKey().getEncoded());
+        String signString = printBase64Binary(signature);
+
+        try {
+            File file = new File(SignFile);
+            FileReader fileReader = new FileReader(file);
+            BufferedReader br = new BufferedReader(fileReader);
+            String line;
+            Path path = Paths.get(SignFile);
+
+            Charset charset = Charset.forName("ISO-8859-1");
+
+            List<String> lines = Files.readAllLines(path, charset);
+
+            int i = 0;
+            boolean newData = true;
+            boolean isEmpty = true;
+            while ((line = br.readLine()) != null) {
+                isEmpty = false;
+                if(line.equals(pubKey)){
+                    line = br.readLine();
+                    newData = false;
+                    break;
+                }
+                else{
+                    br.readLine();
+                    br.readLine();
+                    i+= 3;
+                }
+            }
+
+            if(newData){
+                if(!isEmpty){
+                    lines.add("");
+                    lines.add("");
+                    lines.add("");
+                }
+                lines.add(i, pubKey);
+                lines.add(i + 1, signString);
+            }
+            else{
+                lines.remove(i + 1);
+                lines.add(i + 1, line  + " || " + signString);
+            }
+
+            Files.write(path, lines, charset);
+            br.close();
+            fileReader.close();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
 
     public static void fileCreation(String path) {
         File file = new File(path);
@@ -269,6 +326,8 @@ public class Server implements ServerInterface{
             if(!verifyDigitalSignature(signature, message, ClientPublicKey)&&!verifyDigitalSignature(signatureNonce, decryptNonce, ClientPublicKey)){ //If true, signature checks
                 return;
             }
+
+            storageSignture(client, signature);
 
 
             if (!client.checkNonce(decryptNonce)) {
@@ -481,6 +540,8 @@ public class Server implements ServerInterface{
         if(!verifyDigitalSignature(signature, message, ClientPublicKey)&&!verifyDigitalSignature(signatureNonce, decryptNonce, ClientPublicKey)){ //If true, signature checks
             return null;
         }
+
+            storageSignture(client, signature);
 
         if(!client.checkNonce(decryptNonce)){
             return null;

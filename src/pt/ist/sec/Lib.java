@@ -55,9 +55,9 @@ public class Lib implements ClientInterface{
 
             Registry registry = null;
 
-                //registry = LocateRegistry.getRegistry("192.168.1.9",port);
+                registry = LocateRegistry.getRegistry("192.168.1.9",port);
 
-                registry = LocateRegistry.getRegistry(1000);
+                //registry = LocateRegistry.getRegistry(1000);
 
 
             UnicastRemoteObject.exportObject(client, 0);
