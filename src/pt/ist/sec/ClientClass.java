@@ -59,6 +59,7 @@ public class ClientClass extends Server {
         return ("" + this.nonce).getBytes();
     }
 
+
     protected boolean checkNonce(byte[] nonceBytes){
         try {
             int newNonce = Integer.parseInt(new String(nonceBytes, "ASCII"));

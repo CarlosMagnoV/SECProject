@@ -14,13 +14,13 @@ public class ClientUI {
     private JButton sendPasswordButton;
     private JPanel panelMain;
     private static  JFrame frame = new JFrame("ClientUI");
-    //private static String certFile = System.getProperty("user.dir") + "\\clientData\\KeyStore.jks";
-    private static String certFile = System.getProperty("user.dir") + "\\clientData\\KeyStore.jce";
+    private static String clientKS = System.getProperty("user.dir") + "\\clientData\\KeyStore.jks";
+    //private static String certFile = System.getProperty("user.dir") + "\\clientData\\KeyStore.jce";
 
 
-    public ClientUI()throws Exception {
+    public ClientUI(String port)throws Exception {
 
-        Lib lib = new Lib();
+        final Lib lib = new Lib(Integer.parseInt(port));
         loadStore(lib);
 
 
@@ -29,7 +29,7 @@ public class ClientUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 frame.setVisible(false);
-                JFrame frame3 = new JFrame("Retrieve");
+                final JFrame frame3 = new JFrame("Retrieve");
                 frame3.setContentPane(new Retrieve(lib, frame3, frame).panelMain);
                 frame3.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame3.pack();
@@ -40,7 +40,7 @@ public class ClientUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 frame.setVisible(false);
-                JFrame frame2 = new JFrame("Send");
+                final JFrame frame2 = new JFrame("Send");
                 frame2.setContentPane(new Send(lib, frame2, frame).panelMain);
                 frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame2.pack();
@@ -58,16 +58,16 @@ public class ClientUI {
     public static void main(String[] args)throws Exception
     {
         //getFrame = frame;
-        frame.setContentPane(new ClientUI().panelMain);
+        frame.setContentPane(new ClientUI("3003").panelMain);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
     }
 
     private void loadStore(Lib lib) throws Exception {
-        FileInputStream fis = new FileInputStream(certFile);
+        FileInputStream fis = new FileInputStream(clientKS);
         //KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-        KeyStore keystore = KeyStore.getInstance("JCEKS");
+        KeyStore keystore = KeyStore.getInstance("JKS");
         keystore.load(fis, "changeit".toCharArray()); // esta password é a pass do keystore
         lib.init(keystore,"changeit","client-alias"); // password da chave dentro do keystore
     }

@@ -9,6 +9,7 @@ import java.beans.Expression;
 import java.io.*;
 
 import java.math.BigInteger;
+import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -34,13 +35,13 @@ import static javax.xml.bind.DatatypeConverter.*;
 
 public class Server implements ServerInterface{
 
-    private static String DataFileLoc = System.getProperty("user.dir") + "\\data\\storage.txt";
-    private static String LogFile = System.getProperty("user.dir") + "\\log\\log.txt";
-    private static String RegFile = System.getProperty("user.dir") + "\\data\\register.txt";
-    private static String byteFile = System.getProperty("user.dir") + "\\data\\byteFile";
+    private static String DataFileLoc = System.getProperty("user.dir") + "/data/storage.txt";
+    private static String LogFile = System.getProperty("user.dir") + "/log/log.txt";
+    private static String RegFile = System.getProperty("user.dir") + "/data/register.txt";
+    private static String byteFile = System.getProperty("user.dir") + "/data/byteFile";
 
-    private static String certFile = System.getProperty("user.dir") + "\\clientData\\Server.cer";
-    private static String KeyStoreFile = System.getProperty("user.dir") + "\\clientData\\KeyStore.jks";
+    private static String certFile = System.getProperty("user.dir") + "/serverData/Server.cer";
+    private static String KeyStoreFile = System.getProperty("user.dir") + "/serverData/KeyStore.jks";
 
     private static PublicKey ServerPublicKey;
     private static Key ServerPrivateKey;
@@ -54,7 +55,7 @@ public class Server implements ServerInterface{
     public Server(){
 
     }
-/////////
+
     public static void main(String[] args) {
 
         clientNonces = new ArrayList<>();
@@ -64,7 +65,10 @@ public class Server implements ServerInterface{
             Server obj = new Server();
             ServerInterface stub = (ServerInterface) UnicastRemoteObject.exportObject(obj, 0);
 
-            Registry registry = LocateRegistry.createRegistry(1000);
+            String ip = InetAddress.getLocalHost().getHostAddress();
+
+            System.setProperty("java.rmi.server.hostname", ip);
+            Registry registry = LocateRegistry.createRegistry(Integer.parseInt(args[0]));
             registry.bind("Server", stub);
 
             //FileInputStream fin = new FileInputStream(certFile);
@@ -76,12 +80,12 @@ public class Server implements ServerInterface{
             KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
             keystore.load(fis, "changeit".toCharArray()); // esta password é a pass do keystore
 
-            java.security.cert.Certificate cert = keystore.getCertificate("client-alias");
+            java.security.cert.Certificate cert = keystore.getCertificate("server-alias");
             ServerPublicKey = cert.getPublicKey();
-            ServerPrivateKey = keystore.getKey("client-alias","changeit".toCharArray());
+            ServerPrivateKey = keystore.getKey("server-alias","changeit".toCharArray());
 
 
-            System.err.println("Server ready");
+            System.err.println("Server ready. Connected in: " + ip + ":" + args[0]);
         } catch (Exception e) {
             System.err.println("Server connection error: " + e.toString());
             e.printStackTrace();
@@ -668,8 +672,7 @@ public class Server implements ServerInterface{
             }
         }
 
-
-
+        System.out.println("New client;");
     }
 
     private SecretKey generateSession()throws Exception {

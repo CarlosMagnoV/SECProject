@@ -47,12 +47,19 @@ public class Lib implements ClientInterface{
     private static String pastNonce = System.getProperty("user.dir") + "\\data\\nonce.txt";
     public Lib lib = this;
 
-    public Lib() throws Exception{
+    public Lib(int port) throws Exception{
         client = (ClientInterface)this;
 
         try {
             System.out.println("connecting . . .");
-            Registry registry = LocateRegistry.getRegistry(1000);
+
+            Registry registry = null;
+
+                //registry = LocateRegistry.getRegistry("192.168.1.9",port);
+
+                registry = LocateRegistry.getRegistry(1000);
+
+
             UnicastRemoteObject.exportObject(client, 0);
             stub = (ServerInterface) registry.lookup("Server");
 
@@ -150,7 +157,7 @@ public class Lib implements ClientInterface{
         if(!file.exists()){
             file.createNewFile();
             FileOutputStream output = new FileOutputStream(file, true);
-            output.write(EncryptionAssymmetric(symmetricKeyGen().getEncoded(), ServerPublicKey));
+            output.write(EncryptionAssymmetric(symmetricKeyGen().getEncoded(), ClientPublicKey));
             output.close();
         }
         else{
@@ -210,7 +217,13 @@ public class Lib implements ClientInterface{
         byte[] signatureNonce = makeDigitalSignature(nonce, (PrivateKey)ClientPrivateKey);
 
 
-        byte[] helper = stub.get(cipher, signature, EncryptCommunication(nonce), signatureNonce);
+        byte[] helper = null;
+
+        helper = stub.get(cipher, signature, EncryptCommunication(nonce), signatureNonce);
+
+        if(helper == null){
+            nonceValue = nonceValue + 10;
+        }
 
         //return DecryptionSymmetric(DecryptCommunication(helper));
         byte[] answer = DecryptCommunication(helper);       //password + nonce

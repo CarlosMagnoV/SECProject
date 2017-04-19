@@ -39,55 +39,55 @@ public class Send {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (DomainField.getText().length() <= 4) {
-                    JFrame frame = new JFrame("ErrorMessage");
+                    final JFrame frame = new JFrame("ErrorMessage");
                     frame.setContentPane(new ErrorMessage("Domain field incomplete.", frame).panel1);
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     frame.pack();
                     frame.setVisible(true);
                 } else if (DomainField.getText().length() == 0) {
-                    JFrame frame = new JFrame("ErrorMessage");
+                    final JFrame frame = new JFrame("ErrorMessage");
                     frame.setContentPane(new ErrorMessage("Domain field empty.", frame).panel1);
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     frame.pack();
                     frame.setVisible(true);
                 } else if (DomainField.getText().length() > maxSize) { // maxSize - 2 para termos dois espaços livres para mostar numero de padding padding
-                    JFrame frame = new JFrame("ErrorMessage");
+                    final JFrame frame = new JFrame("ErrorMessage");
                     frame.setContentPane(new ErrorMessage("Domain field is too big).", frame).panel1);
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     frame.pack();
                     frame.setVisible(true);
                 } else if (UsernameField.getText().length() == 0) {
-                    JFrame frame = new JFrame("ErrorMessage");
+                    final JFrame frame = new JFrame("ErrorMessage");
                     frame.setContentPane(new ErrorMessage("Username field empty.", frame).panel1);
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     frame.pack();
                     frame.setVisible(true);
                 } else if (UsernameField.getText().length() < 2) {
-                    JFrame frame = new JFrame("ErrorMessage");
+                    final JFrame frame = new JFrame("ErrorMessage");
                     frame.setContentPane(new ErrorMessage("Username field too short.", frame).panel1);
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     frame.pack();
                     frame.setVisible(true);
                 } else if (UsernameField.getText().length() > maxSize) {
-                    JFrame frame = new JFrame("ErrorMessage");
+                    final JFrame frame = new JFrame("ErrorMessage");
                     frame.setContentPane(new ErrorMessage("Username field too big.", frame).panel1);
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     frame.pack();
                     frame.setVisible(true);
                 } else if (PasswordField.getText().length() == 0) {
-                    JFrame frame = new JFrame("ErrorMessage");
+                    final JFrame frame = new JFrame("ErrorMessage");
                     frame.setContentPane(new ErrorMessage("Password field empty.", frame).panel1);
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     frame.pack();
                     frame.setVisible(true);
                 } else if (PasswordField.getText().length() < 4) {
-                    JFrame frame = new JFrame("ErrorMessage");
+                    final JFrame frame = new JFrame("ErrorMessage");
                     frame.setContentPane(new ErrorMessage("Password field must contain 5 characters or more.", frame).panel1);
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     frame.pack();
                     frame.setVisible(true);
                 } else if (PasswordField.getText().length() > maxSize) {
-                    JFrame frame = new JFrame("ErrorMessage");
+                    final JFrame frame = new JFrame("ErrorMessage");
                     frame.setContentPane(new ErrorMessage("Password field is too big.", frame).panel1);
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     frame.pack();
@@ -101,7 +101,7 @@ public class Send {
                                 maxSize
                         );
 
-                        JFrame frame = new JFrame("ErrorMessage");
+                        final JFrame frame = new JFrame("ErrorMessage");
                         frame.setContentPane(new ErrorMessage(0, "Sucess: Information saved!", frame).panel1);
                         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                         frame.pack();
@@ -111,7 +111,7 @@ public class Send {
                     }
                     catch(Exception a){
                         System.out.println("Exception in Send: " + a);
-                        JFrame frame = new JFrame("ErrorMessage");
+                        final JFrame frame = new JFrame("ErrorMessage");
                         frame.setContentPane(new ErrorMessage("Couldn't save information!", frame).panel1);
                         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                         frame.pack();
