@@ -153,52 +153,58 @@ public class Server implements ServerInterface{
 
 
 
-    public void storeData(PublicKey pubKey, byte[] domain, byte[] username, byte[] password){
+    public void storeData(byte[] pass, String pKeyString, String domainString, String usernameString)throws Exception{
+        String elements = domainString + " " + usernameString;
 
-        try {
-            String concateneted = "";
-            File file = new File(DataFileLoc);
 
-            FileWriter fileWriter = new FileWriter(file.getAbsoluteFile(), true);
-            BufferedWriter bw = new BufferedWriter(fileWriter);
+        File file = new File(DataFileLoc);
+        FileReader fileReader = new FileReader(file);
+        BufferedReader br = new BufferedReader(fileReader);
+        String line;
+        Path path = Paths.get(DataFileLoc);
 
-            concateneted += printBase64Binary(domain) + " " +
-            printBase64Binary(username) + " " +
-            printBase64Binary(password);
+        Charset charset = Charset.forName("ISO-8859-1");
 
-            bw.write(concateneted);
-            bw.close();
-        }
-        catch(IOException e){
-            System.out.println("File Writing Problem: " + e );
-        }
-    }
+        List<String> lines = Files.readAllLines(path, charset);
 
-    public byte[] getData(PublicKey pubKey, byte[] domain, byte[] username) //falta chave publica
-    {
-        try (BufferedReader br = new BufferedReader(new FileReader(DataFileLoc)))
-        {
-            String concateneted = "";
-            concateneted += printBase64Binary(domain) + " " +
-                    printBase64Binary(username) + " ";
-            String line;
-            while ((line = br.readLine()) != null)
-            {
-               if(line.equals(concateneted))
-               {
-                   String[] parts = line.split(" ");
-                   return parseBase64Binary(parts[3]);
-               }
+        int i = 0;
+        Boolean newData = true;
+        while ((line = br.readLine()) != null) {
+            if (line.contains(pKeyString)) {
+                line = br.readLine();
+                if (line.contains(domainString)) {
+                    line = br.readLine();
+                    if (line.contains(usernameString)) {
+                        writeByteCode(pass, Integer.parseInt(br.readLine()));
+                        newData = false;
+                        break;
+                    } else {
+                        br.readLine();
+                    }
+                } else {
+                    br.readLine();
+                    br.readLine();
+                }
+            } else {
+                br.readLine();
+                br.readLine();
+                br.readLine();
             }
+            i += 4;
         }
-        catch(Exception e)
-        {
-            System.out.println("Error retrieving data" + e);
+        if (newData) {
+            //Files.write(Paths.get(DataFileLoc), ("\n"+pKeyString+" "+elements + " " + passwordString).getBytes(), StandardOpenOption.APPEND);
+            Files.write(Paths.get(DataFileLoc),
+                    (pKeyString + "\n" + domainString + "\n" + usernameString + "\n" + (getLastNumber()+1) + "\n").getBytes(),
+                    StandardOpenOption.APPEND);
+            writeByteCode(pass, -1);
+        } else {
+            Files.write(path, lines, charset);
+        }
 
-        }
-        byte[] missing = parseBase64Binary("");
-        return missing;
+        br.close();
     }
+
 
 
     public byte[] EncryptCommunication(byte[] plaintext, SecretKey SessKey) throws Exception{
@@ -235,14 +241,6 @@ public class Server implements ServerInterface{
         return cipherData;
     }
 
-    private byte[] DecryptionAssymmetric(byte[] ciphertext, PublicKey key) throws Exception {
-
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        byte[] cipherData = cipher.doFinal(ciphertext);
-
-        return cipherData;
-    }
     public int checkConnection(){
         return 1;
     }
@@ -285,7 +283,7 @@ public class Server implements ServerInterface{
             }
             String dom = new String(copyOfRange(restMsg, 0, 30), "ASCII");
             String usr = new String(copyOfRange(restMsg, 30, 60), "ASCII");
-            //String pass = new String(copyOfRange(restMsg, 60, restMsg.length), "ASCII");
+
             byte[] pass = copyOfRange(restMsg, 60, restMsg.length);
             String domFinal = rmPadd(dom.toCharArray());
             String usrFinal = rmPadd(usr.toCharArray());
@@ -294,57 +292,10 @@ public class Server implements ServerInterface{
             String pKeyString = printBase64Binary(pKeyBytes);
             String domainString = domFinal;
             String usernameString = usrFinal;
-            //String passwordString = pass;
-
-            String elements = domainString + " " + usernameString;
 
 
-            File file = new File(DataFileLoc);
-            FileReader fileReader = new FileReader(file);
-            BufferedReader br = new BufferedReader(fileReader);
-            String line;
-            Path path = Paths.get(DataFileLoc);
+            storeData(pass,pKeyString,domainString,usernameString);
 
-            Charset charset = Charset.forName("ISO-8859-1");
-
-            List<String> lines = Files.readAllLines(path, charset);
-
-            int i = 0;
-            Boolean newData = true;
-            while ((line = br.readLine()) != null) {
-                if (line.contains(pKeyString)) {
-                    line = br.readLine();
-                    if (line.contains(domainString)) {
-                        line = br.readLine();
-                        if (line.contains(usernameString)) {
-                            writeByteCode(pass, Integer.parseInt(br.readLine()));
-                            newData = false;
-                            break;
-                        } else {
-                            br.readLine();
-                        }
-                    } else {
-                        br.readLine();
-                        br.readLine();
-                    }
-                } else {
-                    br.readLine();
-                    br.readLine();
-                    br.readLine();
-                }
-                i += 4;
-            }
-            if (newData) {
-                //Files.write(Paths.get(DataFileLoc), ("\n"+pKeyString+" "+elements + " " + passwordString).getBytes(), StandardOpenOption.APPEND);
-                Files.write(Paths.get(DataFileLoc),
-                        (pKeyString + "\n" + domainString + "\n" + usernameString + "\n" + (getLastNumber()+1) + "\n").getBytes(),
-                        StandardOpenOption.APPEND);
-                writeByteCode(pass, -1);
-            } else {
-                Files.write(path, lines, charset);
-            }
-
-            br.close();
     }
 
     private int getLastNumber(){
