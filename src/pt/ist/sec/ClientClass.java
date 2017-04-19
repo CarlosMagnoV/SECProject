@@ -20,8 +20,6 @@ public class ClientClass extends Server {
     private byte[] signature;
     private int nonce;
 
-    private String noncePath = System.getProperty("user.dir") + "\\data\\nonces.txt";;
-
     public ClientClass (SecretKey sessionKey, PublicKey pk){
         this.sessionKey = sessionKey;
         this.publicKey = pk;
