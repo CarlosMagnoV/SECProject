@@ -40,13 +40,9 @@ public class Server implements ServerInterface{
     private static String RegFile = System.getProperty("user.dir") + "/data/register.txt";
     private static String byteFile = System.getProperty("user.dir") + "/data/byteFile";
 
-    private static String certFile = System.getProperty("user.dir") + "/serverData/Server.cer";
     private static String KeyStoreFile = System.getProperty("user.dir") + "/serverData/KeyStore.jks";
 
-    private static PublicKey ServerPublicKey;
     private static Key ServerPrivateKey;
-
-    private KeyAgreement bobKeyAgree;
 
     private static ArrayList<ClientClass> clientList = new ArrayList<>();
     private static ArrayList<ClientInterface> clientNonces;
@@ -77,7 +73,6 @@ public class Server implements ServerInterface{
             keystore.load(fis, "changeit".toCharArray()); // esta password é a pass do keystore
 
             java.security.cert.Certificate cert = keystore.getCertificate("server-alias");
-            ServerPublicKey = cert.getPublicKey();
             ServerPrivateKey = keystore.getKey("server-alias","changeit".toCharArray());
 
 
@@ -152,7 +147,6 @@ public class Server implements ServerInterface{
     }
 
 
-
     public void storeData(byte[] pass, String pKeyString, String domainString, String usernameString)throws Exception{
         String elements = domainString + " " + usernameString;
 
@@ -193,7 +187,6 @@ public class Server implements ServerInterface{
             i += 4;
         }
         if (newData) {
-            //Files.write(Paths.get(DataFileLoc), ("\n"+pKeyString+" "+elements + " " + passwordString).getBytes(), StandardOpenOption.APPEND);
             Files.write(Paths.get(DataFileLoc),
                     (pKeyString + "\n" + domainString + "\n" + usernameString + "\n" + (getLastNumber()+1) + "\n").getBytes(),
                     StandardOpenOption.APPEND);
@@ -455,21 +448,6 @@ public class Server implements ServerInterface{
         }
     }
 
-    public byte[] createNonce(){
-        SecureRandom random = new SecureRandom();
-        byte bytes[] = new byte[16];
-        random.nextBytes(bytes);
-        byte seed[] = random.generateSeed(16);
-
-        while(usedNonces.contains(seed)){
-            random.nextBytes(bytes);
-            seed = random.generateSeed(16);
-        }
-
-        usedNonces.add(seed);
-
-        return seed;
-    }
 
     public byte[] get2( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce){
 
@@ -575,21 +553,6 @@ public class Server implements ServerInterface{
             return "noFile".getBytes();
         }
 
-
-
-
-
-        //Area de teste, deu ok
-
-        /*
-        try {
-            byte[] Msg = copyOfRange(restMsg, 0, 30);
-            System.out.println("Domain: " + new String(Msg, "ASCII"));
-            return EncryptCommunication(copyOfRange(Msg, 0, 30), client.getSessionKey());    //so para nao dar erro
-        }
-        catch(Exception e){}
-
-        */
         return null;
     }
 
@@ -636,57 +599,6 @@ public class Server implements ServerInterface{
             System.out.println("Error adding client: "+ e);
         }
     }
-
-
-
-    //Deste metodo, devemos fazer uma verificação sobre o valor retornado. se for null,
-    // nao encontrou o client(a sua chave)na lista
-    private SecretKey getSessionKey(PublicKey clientPublicKey){
-        for(ClientClass element: clientList){
-            if(element.getPublicKey().equals(clientPublicKey)){
-                return element.getSessionKey();
-            }
-        }
-        return null;
-    }
-
-    private boolean alreadyRegistered(byte[] publicKey, SecretKey newSessionKey){
-
-        try {
-            PublicKey pk = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(publicKey));
-
-            for (ClientClass element : clientList) {
-                if (element.getPublicKey().equals(pk)) {
-                    element.updateSessionKey(newSessionKey);
-                    return true;
-                }
-            }
-        }
-        catch (Exception e){
-            return false;
-        }
-        return false;
-    }
-
-
-
-   /* private byte[] addNonce(ClientInterface lib){
-        clientNonces.add(lib);
-        return lib.createNonce();
-    }*/
-
-
-
-    //49 - nova lista de elementos do tipo ClientClass
-    //427, 428. adicionar um client à lista
-    //426, PubKey cifrada (mudou de PublicKey para byte[]
-    //433, chave já vem em bytes
-    //305 - 321
-    //396 - 412
-    //291, not global
-    //49, adeus var global
-
-
 
 
 

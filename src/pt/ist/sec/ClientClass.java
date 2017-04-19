@@ -12,9 +12,7 @@ import java.util.Arrays;
 
 import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 
-/**
- * Created by Romeu Viana on 14/03/2017.
- */
+
 public class ClientClass extends Server {
     private PublicKey publicKey;
     private SecretKey sessionKey;
@@ -32,7 +30,7 @@ public class ClientClass extends Server {
     protected void setPublicKey(PublicKey pubKey){
 
         this.publicKey = pubKey;
-        //noncePath = System.getProperty("user.dir") + "\\data\\" + Arrays.copyOf(publicKey.getEncoded(),10) + ".txt";
+
     }
 
     protected PublicKey getPublicKey(){
@@ -45,10 +43,6 @@ public class ClientClass extends Server {
         return sessionKey;
     }
 
-    protected void updateSessionKey(SecretKey sessionKey){
-
-        this.sessionKey = sessionKey;
-    }
 
     protected void setNonce(int nonce){
         this.nonce = nonce;
