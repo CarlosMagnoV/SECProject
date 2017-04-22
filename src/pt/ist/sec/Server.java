@@ -49,7 +49,7 @@ public class Server implements ServerInterface{
     private static Key ServerPrivateKey;
 
     private static ArrayList<ClientClass> clientList = new ArrayList<>();
-    private static ArrayList<Replica> replicsList = new ArrayList<>();
+    private static ArrayList<Integer> portList = new ArrayList<>();
 
     private static ServerInterface server;
 
@@ -70,9 +70,9 @@ public class Server implements ServerInterface{
             myPort = args[0];
             System.setProperty("java.rmi.server.hostname", ip);
             Registry registry = LocateRegistry.createRegistry(Integer.parseInt(args[0]));
-            registry.bind("Server", stub);
+            registry.bind(args[0], stub);
 
-            connectReplics(args);
+            connectReplicas(args);
 
             FileInputStream fis = new FileInputStream(KeyStoreFile);
             KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -98,7 +98,7 @@ public class Server implements ServerInterface{
         while(true);
     }
 
-    public static void connectReplics(String[] ports) throws Exception{
+    public static void connectReplicas(String[] ports) throws Exception{
 
         for(int i = 1; i < ports.length; i++){
             Registry registry = null;
@@ -108,24 +108,32 @@ public class Server implements ServerInterface{
 
             server = new Server();
             UnicastRemoteObject.exportObject(server, 0);
-            ServerInterface stub = (ServerInterface) registry.lookup("Server");
+            ServerInterface stub = (ServerInterface) registry.lookup(ports[i]);
+            portList.add(Integer.parseInt(ports[i]));
 
-            Replica rep = new Replica(Integer.parseInt(ports[i]), stub);
-            replicsList.add(rep);
             stub.registerServer(myPort);
+            stub.hello(myPort);
         }
 
+
+
     }
+
     public void registerServer(String port) throws Exception{
+        portList.add(Integer.parseInt(port));
 
+    }
+
+    private ServerInterface getReplica(int port)throws Exception{
         Registry registry = null;
-
         String ip = InetAddress.getLocalHost().getHostAddress();
-        registry = LocateRegistry.getRegistry(ip, Integer.parseInt(port));
+        registry = LocateRegistry.getRegistry(ip, port);
+        ServerInterface stub = (ServerInterface) registry.lookup(""+port);
+        return stub;
+    }
 
-        ServerInterface stub = (ServerInterface) registry.lookup("Server");
-        Replica rep = new Replica(Integer.parseInt(port), stub);
-        replicsList.add(rep);
+    public void hello(String port){
+        System.out.println("Hello there! From port: " + port);
     }
 
     private void storageSignture(ClientClass client, byte[] signature){
@@ -677,16 +685,18 @@ public class Server implements ServerInterface{
                 client.setNonce(newNonce);
             }
         }
-        for(Replica r : replicsList)
+        for(int p : portList)
         {
-            r.replica.broadCast();
+            System.out.println("Broadcasting to " + p);
+
+            getReplica(p).broadCast(myPort);
         }
         System.out.println("New client;");
     }
 
-    public void broadCast()throws Exception
+    public void broadCast(String port)throws Exception
     {
-       System.out.println("Broadcast triggered!");
+       System.out.println("Broadcast triggered in " + port + "! ");
     }
 
     private SecretKey generateSession()throws Exception {

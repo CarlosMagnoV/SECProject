@@ -62,7 +62,7 @@ public class Lib implements ClientInterface{
 
 
             UnicastRemoteObject.exportObject(client, 0);
-            stub = (ServerInterface) registry.lookup("Server");
+            stub = (ServerInterface) registry.lookup(""+port);
 
             File file = new File(pastNonce);
 
