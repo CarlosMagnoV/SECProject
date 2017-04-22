@@ -58,7 +58,7 @@ public class ClientUI {
     public static void main(String[] args)throws Exception
     {
         //getFrame = frame;
-        frame.setContentPane(new ClientUI("3003").panelMain);
+        frame.setContentPane(new ClientUI(args[0]).panelMain);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);

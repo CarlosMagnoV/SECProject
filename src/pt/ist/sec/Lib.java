@@ -4,6 +4,7 @@ import sun.text.normalizer.UTF16;
 import javax.crypto.*;
 import java.io.*;
 import java.math.BigInteger;
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -54,8 +55,8 @@ public class Lib implements ClientInterface{
             System.out.println("connecting . . .");
 
             Registry registry = null;
-
-                registry = LocateRegistry.getRegistry("192.168.1.9",port);
+             String ip = InetAddress.getLocalHost().getHostAddress();
+                registry = LocateRegistry.getRegistry(ip,port);
 
                 //registry = LocateRegistry.getRegistry(1000);
 
