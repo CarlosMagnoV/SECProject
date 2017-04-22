@@ -10,6 +10,7 @@ import java.io.*;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.nio.channels.MulticastChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -41,13 +42,16 @@ public class Server implements ServerInterface{
     private static String RegFile = System.getProperty("user.dir") + "/data/register.txt";
     private static String byteFile = System.getProperty("user.dir") + "/data/byteFile";
 
+    private static String myPort;
+
     private static String KeyStoreFile = System.getProperty("user.dir") + "/serverData/KeyStore.jks";
 
     private static Key ServerPrivateKey;
 
     private static ArrayList<ClientClass> clientList = new ArrayList<>();
-    private static ArrayList<ClientInterface> clientNonces;
-    private static ArrayList<byte[]> usedNonces = new ArrayList<>();;
+    private static ArrayList<Replica> replicsList = new ArrayList<>();
+
+    private static ServerInterface server;
 
     public Server(){
 
@@ -55,19 +59,20 @@ public class Server implements ServerInterface{
 
     public static void main(String[] args) {
 
-        clientNonces = new ArrayList<>();
         try {
 
             System.out.println("connecting . . .");
-            Server obj = new Server();
-            ServerInterface stub = (ServerInterface) UnicastRemoteObject.exportObject(obj, 0);
+            server = new Server();
+            ServerInterface stub = (ServerInterface) UnicastRemoteObject.exportObject(server, 0);
 
             String ip = InetAddress.getLocalHost().getHostAddress();
 
+            myPort = args[0];
             System.setProperty("java.rmi.server.hostname", ip);
             Registry registry = LocateRegistry.createRegistry(Integer.parseInt(args[0]));
             registry.bind("Server", stub);
-            
+
+            connectReplics(args);
 
             FileInputStream fis = new FileInputStream(KeyStoreFile);
             KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -91,6 +96,26 @@ public class Server implements ServerInterface{
 
 
         while(true);
+    }
+
+    public static void connectReplics(String[] ports) throws Exception{
+
+        for(int i = 1; i < ports.length; i++){
+            Registry registry = null;
+
+            String ip = InetAddress.getLocalHost().getHostAddress();
+            registry = LocateRegistry.getRegistry(ip, Integer.parseInt(ports[i]));
+
+            server = new Server();
+            UnicastRemoteObject.exportObject(server, 0);
+            ServerInterface stub = (ServerInterface) registry.lookup("Server");
+
+            Replica rep = new Replica(Integer.parseInt(ports[i]), stub);
+            replicsList.add(rep);
+
+
+        }
+
     }
 
     private void storageSignture(ClientClass client, byte[] signature){
