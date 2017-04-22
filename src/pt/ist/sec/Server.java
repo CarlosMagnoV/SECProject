@@ -112,10 +112,20 @@ public class Server implements ServerInterface{
 
             Replica rep = new Replica(Integer.parseInt(ports[i]), stub);
             replicsList.add(rep);
-
-
+            stub.registerServer(myPort);
         }
 
+    }
+    public void registerServer(String port) throws Exception{
+
+        Registry registry = null;
+
+        String ip = InetAddress.getLocalHost().getHostAddress();
+        registry = LocateRegistry.getRegistry(ip, Integer.parseInt(port));
+
+        ServerInterface stub = (ServerInterface) registry.lookup("Server");
+        Replica rep = new Replica(Integer.parseInt(port), stub);
+        replicsList.add(rep);
     }
 
     private void storageSignture(ClientClass client, byte[] signature){
@@ -667,8 +677,16 @@ public class Server implements ServerInterface{
                 client.setNonce(newNonce);
             }
         }
-
+        for(Replica r : replicsList)
+        {
+            r.replica.broadCast();
+        }
         System.out.println("New client;");
+    }
+
+    public void broadCast()throws Exception
+    {
+       System.out.println("Broadcast triggered!");
     }
 
     private SecretKey generateSession()throws Exception {
