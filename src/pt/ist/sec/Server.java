@@ -30,6 +30,8 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.util.Arrays.copyOfRange;
 import static javax.xml.bind.DatatypeConverter.*;
@@ -137,7 +139,8 @@ public class Server implements ServerInterface{
     }
 
     private void storageSignture(ClientClass client, byte[] signature){
-
+        Lock lock = new ReentrantLock();
+        lock.lock();
         String pubKey = printBase64Binary(client.getPublicKey().getEncoded());
         String signString = printBase64Binary(signature);
 
@@ -190,6 +193,7 @@ public class Server implements ServerInterface{
         catch(Exception e){
             e.printStackTrace();
         }
+        lock.unlock();
     }
 
     public static void fileCreation(String path) {
@@ -207,7 +211,8 @@ public class Server implements ServerInterface{
     }
 
     private static void writeByteCode(byte[] code, int index){
-
+        Lock lock = new ReentrantLock();
+        lock.lock();
         try {
             if(index >= 0) {
                 //FileOutputStream output = new FileOutputStream(byteFile);
@@ -227,6 +232,7 @@ public class Server implements ServerInterface{
             System.out.println("Error writing password in file: " + e);
             e.printStackTrace();
         }
+        lock.unlock();
     }
 
     private byte[] readByteCode(int index){
@@ -248,6 +254,8 @@ public class Server implements ServerInterface{
 
 
     public void storeData(byte[] pass, String pKeyString, String domainString, String usernameString)throws Exception{
+        Lock lock = new ReentrantLock();
+        lock.lock();
         String elements = domainString + " " + usernameString;
 
 
@@ -296,6 +304,7 @@ public class Server implements ServerInterface{
         }
 
         br.close();
+        lock.unlock();
     }
 
 
