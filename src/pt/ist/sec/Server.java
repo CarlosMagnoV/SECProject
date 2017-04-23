@@ -43,16 +43,18 @@ public class Server implements ServerInterface{
     private static String SignFile = System.getProperty("user.dir") + "/log/signatures.txt";
     private static String RegFile = System.getProperty("user.dir") + "/data/register.txt";
     private static String byteFile = System.getProperty("user.dir") + "/data/byteFile";
+    private static String certFile = System.getProperty("user.dir") + "/serverData/Server.cer";
 
-    private static String myPort;
+    public static String myPort;
 
     private static String KeyStoreFile = System.getProperty("user.dir") + "/serverData/KeyStore.jks";
 
     private static Key ServerPrivateKey;
+    private static PublicKey ServerPublicKey;
 
     private static ArrayList<ClientClass> clientList = new ArrayList<>();
-    private static ArrayList<Integer> portList = new ArrayList<>();
-
+    public static ArrayList<Integer> portList = new ArrayList<>();
+    public static SharedMemoryRegister reg;
     private static ServerInterface server;
 
     public Server(){
@@ -62,7 +64,8 @@ public class Server implements ServerInterface{
     public static void main(String[] args) {
 
         try {
-
+            getMyPublic();
+            reg = new SharedMemoryRegister();
             System.out.println("connecting . . .");
             server = new Server();
             ServerInterface stub = (ServerInterface) UnicastRemoteObject.exportObject(server, 0);
@@ -84,6 +87,7 @@ public class Server implements ServerInterface{
             ServerPrivateKey = keystore.getKey("server-alias","changeit".toCharArray());
 
 
+
             System.err.println("Server ready. Connected in: " + ip + ":" + args[0]);
         } catch (Exception e) {
             System.err.println("Server connection error: " + e.toString());
@@ -100,6 +104,31 @@ public class Server implements ServerInterface{
         while(true);
     }
 
+    public static void getMyPublic()throws Exception{
+        FileInputStream fin = new FileInputStream(certFile);
+        CertificateFactory f = CertificateFactory.getInstance("X.509");
+        X509Certificate certificate = (X509Certificate)f.generateCertificate(fin);
+        ServerPublicKey = certificate.getPublicKey();
+
+    }
+
+    public void registerDeliver(byte[] sessKey, PublicKey pKey)throws Exception{
+        byte[] clientSession = DecryptionAssymmetric(sessKey);
+        SecretKey originalKey = new SecretKeySpec(clientSession,"AES");
+        ClientClass c = new ClientClass(originalKey, pKey);
+        clientList.add(c);
+        System.out.println("Cliente adicionado");
+    }
+
+    public byte[] DecryptionAssymmetric(byte[] ciphertext) throws Exception {
+
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.DECRYPT_MODE, ServerPrivateKey);
+        byte[] cipherData = cipher.doFinal(ciphertext);
+
+        return cipherData;
+    }
+
     public static void connectReplicas(String[] ports) throws Exception{
 
         for(int i = 1; i < ports.length; i++){
@@ -114,28 +143,12 @@ public class Server implements ServerInterface{
             portList.add(Integer.parseInt(ports[i]));
 
             stub.registerServer(myPort);
-            stub.hello(myPort);
         }
-
-
-
     }
 
     public void registerServer(String port) throws Exception{
         portList.add(Integer.parseInt(port));
 
-    }
-
-    private ServerInterface getReplica(int port)throws Exception{
-        Registry registry = null;
-        String ip = InetAddress.getLocalHost().getHostAddress();
-        registry = LocateRegistry.getRegistry(ip, port);
-        ServerInterface stub = (ServerInterface) registry.lookup(""+port);
-        return stub;
-    }
-
-    public void hello(String port){
-        System.out.println("Hello there! From port: " + port);
     }
 
     private void storageSignture(ClientClass client, byte[] signature){
@@ -678,35 +691,26 @@ public class Server implements ServerInterface{
         byte[] decipheredPubK = pubKey;
 
         SecretKey SessKey = generateSession();
-        //if(!alreadyRegistered(decipheredPubK, SessKey)){ // se o cliente já existir, alreadyRegistered faz update da sua chave de sessão
-            addClient(decipheredPubK,SessKey);
-        //}
-
+        addClient(decipheredPubK,SessKey);
+        PublicKey decipheredKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decipheredPubK));
+        reg.broadcastRegister(EncryptionAssymmetric(SessKey.getEncoded(), ServerPublicKey), decipheredKey);
         //pass the session key to client
         c.setSessionKey(EncryptionAssymmetric(SessKey.getEncoded(),
                 KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decipheredPubK)))
                 );
 
-        PublicKey decipheredKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decipheredPubK));
         for(ClientClass client: clientList){
             if(client.getPublicKey().equals(decipheredKey) && client.getSessionKey().equals(SessKey)){
                 int newNonce = Integer.parseInt(new String(DecryptCommunication(c.getNonce(), SessKey), "ASCII"));
                 client.setNonce(newNonce);
             }
         }
-        for(int p : portList)
-        {
-            System.out.println("Broadcasting to " + p);
-
-            getReplica(p).broadCast(myPort);
-        }
         System.out.println("New client;");
     }
 
-    public void broadCast(String port)throws Exception
-    {
-       System.out.println("Broadcast triggered in " + port + "! ");
-    }
+
+
+
 
     private SecretKey generateSession()throws Exception {
         KeyGenerator keygen = KeyGenerator.getInstance("AES");
@@ -716,11 +720,14 @@ public class Server implements ServerInterface{
     }
 
     private void addClient(byte[] clientPublicKey, SecretKey sessionKey){
+        Lock lock = new ReentrantLock();
+        lock.lock();
         try {
             clientList.add(new ClientClass(sessionKey, KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(clientPublicKey))));
         }catch(Exception e){
             System.out.println("Error adding client: "+ e);
         }
+        lock.unlock();
     }
 
 
