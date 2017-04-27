@@ -43,7 +43,7 @@ public class Server implements ServerInterface{
     private static String SignFile = System.getProperty("user.dir") + "/log/signatures.txt";
     private static String RegFile = System.getProperty("user.dir") + "/data/register.txt";
     private static String byteFile = System.getProperty("user.dir") + "/data/byteFile";
-    private static String certFile = System.getProperty("user.dir") + "/serverData/server.cer";
+    private static String certFile = System.getProperty("user.dir") + "/serverData/Server.cer";
 
     public static String myPort;
 
