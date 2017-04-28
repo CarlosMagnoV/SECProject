@@ -46,7 +46,7 @@ public class Server implements ServerInterface{
     private static String certFile = System.getProperty("user.dir") + "/serverData/server.cer";
 
     public static String myPort;
-
+    public static Boolean amWriter = true;
     private static String KeyStoreFile = System.getProperty("user.dir") + "/serverData/KeyStore.jks";
 
     private static Key ServerPrivateKey;
@@ -120,6 +120,16 @@ public class Server implements ServerInterface{
         System.out.println("Cliente adicionado");
     }
 
+    public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts)throws Exception{
+        amWriter = false;
+        reg.targetDeliver(message, signature, nonce, signatureNonce, wts, Integer.parseInt(myPort));
+        System.out.println("Recieved :" + printBase64Binary(message));
+    }
+
+    public void ackReturn(int wts, int port){
+        reg.Deliver(wts, port);
+    }
+
     public byte[] DecryptionAssymmetric(byte[] ciphertext) throws Exception {
 
         Cipher cipher = Cipher.getInstance("RSA");
@@ -128,7 +138,7 @@ public class Server implements ServerInterface{
 
         return cipherData;
     }
-
+    //Updates the port list
     public static void connectReplicas(String[] ports) throws Exception{
 
         for(int i = 1; i < ports.length; i++){
@@ -360,21 +370,25 @@ public class Server implements ServerInterface{
         return 1;
     }
 
-    public void put(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce) throws Exception{
-
+    public  void put(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce) throws Exception{
 
         byte[] pKeyBytes = null;
         byte[] restMsg = null;
         byte[] decryptNonce = null;
-            ClientClass client = clientList.get(0);
-            for(ClientClass element: clientList) {
+        ClientClass client = clientList.get(0);
 
-                try {
-                    byte[] Bmsg = DecryptCommunication(message, element.getSessionKey());
-                    pKeyBytes = copyOfRange(Bmsg,0,294); // parte da chave publica
-                    restMsg = copyOfRange(Bmsg, 294, Bmsg.length); // resto dos argumentos
-                    decryptNonce = DecryptCommunication(nonce, element.getSessionKey());
-                    client = element;
+        if(amWriter) {
+            reg.write(message, signature, nonce, signatureNonce);
+        }
+
+        for(ClientClass element: clientList) {
+
+            try {
+                byte[] Bmsg = DecryptCommunication(message, element.getSessionKey());
+                pKeyBytes = copyOfRange(Bmsg,0,294); // parte da chave publica
+                restMsg = copyOfRange(Bmsg, 294, Bmsg.length); // resto dos argumentos
+                decryptNonce = DecryptCommunication(nonce, element.getSessionKey());
+                client = element;
 
                 }
                 catch(Throwable e){
@@ -401,6 +415,8 @@ public class Server implements ServerInterface{
             String dom = new String(copyOfRange(restMsg, 0, 30), "ASCII");
             String usr = new String(copyOfRange(restMsg, 30, 60), "ASCII");
 
+
+
             byte[] pass = copyOfRange(restMsg, 60, restMsg.length);
             String domFinal = rmPadd(dom.toCharArray());
             String usrFinal = rmPadd(usr.toCharArray());
@@ -411,7 +427,9 @@ public class Server implements ServerInterface{
             String usernameString = usrFinal;
 
 
+
             storeData(pass,pKeyString,domainString,usernameString);
+
 
     }
 
@@ -705,7 +723,6 @@ public class Server implements ServerInterface{
                 client.setNonce(newNonce);
             }
         }
-        System.out.println("New client;");
     }
 
 

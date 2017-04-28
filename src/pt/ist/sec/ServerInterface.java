@@ -16,4 +16,6 @@ public interface ServerInterface extends Remote{
     void register(byte[] pubKey, ClientInterface c) throws Exception;
     void registerDeliver(byte[] sessKey, PublicKey pKey)throws Exception;
     void registerServer(String port) throws Exception;
+    void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts) throws Exception;
+    void ackReturn(int wts, int port) throws Exception;
 }
