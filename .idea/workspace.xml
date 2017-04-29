@@ -32,8 +32,8 @@
       <file leaf-file-name="Server.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/Server.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="479">
-              <caret line="380" column="12" lean-forward="false" selection-start-line="380" selection-start-column="12" selection-end-line="380" selection-end-column="12" />
+            <state relative-caret-position="395">
+              <caret line="389" column="81" lean-forward="true" selection-start-line="389" selection-start-column="20" selection-end-line="389" selection-end-column="81" />
               <folding />
             </state>
           </provider>
@@ -42,8 +42,8 @@
       <file leaf-file-name="SharedMemoryRegister.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/SharedMemoryRegister.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="483">
-              <caret line="71" column="0" lean-forward="false" selection-start-line="71" selection-start-column="0" selection-end-line="71" selection-end-column="0" />
+            <state relative-caret-position="957">
+              <caret line="68" column="25" lean-forward="true" selection-start-line="68" selection-start-column="25" selection-end-line="68" selection-end-column="25" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -51,11 +51,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ServerInterface.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ServerInterface.java">
+      <file leaf-file-name="ClientClass.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ClientClass.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="294">
-              <caret line="18" column="91" lean-forward="false" selection-start-line="18" selection-start-column="91" selection-end-line="18" selection-end-column="91" />
+              <caret line="24" column="66" lean-forward="false" selection-start-line="24" selection-start-column="64" selection-end-line="24" selection-end-column="66" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Lib.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/Lib.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="2961">
+              <caret line="190" column="7" lean-forward="false" selection-start-line="190" selection-start-column="7" selection-end-line="190" selection-end-column="46" />
               <folding />
             </state>
           </provider>
@@ -73,35 +83,35 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>DecryptionAssymmetric</find>
-      <find>registerDe</find>
-      <find>PKcs</find>
-      <find>Keyfactor</find>
-      <find>Deliver</find>
-      <find>register</find>
-      <find>Assy</find>
-      <find>certFile</find>
-      <find>Register</find>
-      <find>RegisterDeliver</find>
-      <find>replica</find>
-      <find>Replica</find>
       <find>get2</find>
-      <find>put</find>
       <find>broadcast</find>
       <find>deliver</find>
-      <find>writeRe</find>
       <find>myPort</find>
       <find>ack</find>
       <find>writeReturn</find>
       <find>writer</find>
       <find>broadcastRegister</find>
       <find>writeret</find>
-      <find>writere</find>
       <find>Broadcast</find>
       <find>Broad</find>
       <find>ackret</find>
       <find>write</find>
       <find>ackre</find>
+      <find>void</find>
+      <find>c</find>
+      <find>c.</find>
+      <find>set</find>
+      <find>setS</find>
+      <find>writeRe</find>
+      <find>void</find>
+      <find>registerDeliver</find>
+      <find>registerDe</find>
+      <find>writere</find>
+      <find>reg</find>
+      <find>put</find>
+      <find>reg.</find>
+      <find>register</find>
+      <find>addClient</find>
       <find>void put</find>
     </findStrings>
   </component>
@@ -131,16 +141,16 @@
         <option value="$PROJECT_DIR$/src/pt/ist/sec/ErrorMessage.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/Send.form" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/Retrieve.form" />
-        <option value="$PROJECT_DIR$/src/pt/ist/sec/ClientInterface.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/Send.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/Retrieve.java" />
-        <option value="$PROJECT_DIR$/src/pt/ist/sec/ClientClass.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/Replica.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/ClientUI.java" />
-        <option value="$PROJECT_DIR$/src/pt/ist/sec/Lib.java" />
+        <option value="$PROJECT_DIR$/src/pt/ist/sec/ClientClass.java" />
+        <option value="$PROJECT_DIR$/src/pt/ist/sec/ClientInterface.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/ServerInterface.java" />
-        <option value="$PROJECT_DIR$/src/pt/ist/sec/Server.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/SharedMemoryRegister.java" />
+        <option value="$PROJECT_DIR$/src/pt/ist/sec/Server.java" />
+        <option value="$PROJECT_DIR$/src/pt/ist/sec/Lib.java" />
       </list>
     </option>
   </component>
@@ -172,9 +182,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="PackagesPane" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -221,6 +229,8 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -536,7 +546,7 @@
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3188406" sideWeight="0.5060514" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2788145" sideWeight="0.49394855" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2788145" sideWeight="0.49394855" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Properties" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32919255" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
@@ -604,49 +614,13 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/pt/ist/sec/Lib.java</url>
-          <line>208</line>
-          <properties />
-          <option name="timeStamp" value="136" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/pt/ist/sec/ClientClass.java</url>
-          <line>64</line>
+          <line>68</line>
           <properties />
           <option name="timeStamp" value="142" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/pt/ist/sec/Lib.java</url>
-          <line>214</line>
-          <properties />
-          <option name="timeStamp" value="150" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/pt/ist/sec/Lib.java</url>
-          <line>219</line>
-          <properties />
-          <option name="timeStamp" value="151" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/pt/ist/sec/Lib.java</url>
-          <line>226</line>
-          <properties />
-          <option name="timeStamp" value="154" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/pt/ist/sec/Lib.java</url>
-          <line>221</line>
-          <properties />
-          <option name="timeStamp" value="157" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/pt/ist/sec/Server.java</url>
-          <line>715</line>
-          <properties />
-          <option name="timeStamp" value="175" />
-        </line-breakpoint>
       </breakpoints>
-      <option name="time" value="182" />
+      <option name="time" value="184" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -716,13 +690,6 @@
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.8.0_121/src.zip!/java/lang/Object.java" />
     <entry file="jar://C:/Program Files/Java/jdk1.8.0_121/src.zip!/java/rmi/server/UnicastRemoteObject.java" />
-    <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ClientInterface.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="9" column="17" lean-forward="false" selection-start-line="9" selection-start-column="17" selection-end-line="9" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ClientUI.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1155">
@@ -731,43 +698,51 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ClientClass.java">
+    <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/Replica.java" />
+    <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ServerInterface.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="22" column="38" lean-forward="false" selection-start-line="22" selection-start-column="38" selection-end-line="22" selection-end-column="38" />
+        <state relative-caret-position="357">
+          <caret line="21" column="0" lean-forward="true" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ClientInterface.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="84">
+          <caret line="9" column="17" lean-forward="false" selection-start-line="9" selection-start-column="17" selection-end-line="9" selection-end-column="17" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/Lib.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="808">
-          <caret line="148" column="8" lean-forward="false" selection-start-line="148" selection-start-column="8" selection-end-line="152" selection-end-column="0" />
+        <state relative-caret-position="2961">
+          <caret line="190" column="7" lean-forward="false" selection-start-line="190" selection-start-column="7" selection-end-line="190" selection-end-column="46" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/Replica.java" />
-    <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ServerInterface.java">
+    <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ClientClass.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="294">
-          <caret line="18" column="91" lean-forward="false" selection-start-line="18" selection-start-column="91" selection-end-line="18" selection-end-column="91" />
+          <caret line="24" column="66" lean-forward="false" selection-start-line="24" selection-start-column="64" selection-end-line="24" selection-end-column="66" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/Server.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="479">
-          <caret line="380" column="12" lean-forward="false" selection-start-line="380" selection-start-column="12" selection-end-line="380" selection-end-column="12" />
+        <state relative-caret-position="395">
+          <caret line="389" column="81" lean-forward="true" selection-start-line="389" selection-start-column="20" selection-end-line="389" selection-end-column="81" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/SharedMemoryRegister.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="483">
-          <caret line="71" column="0" lean-forward="false" selection-start-line="71" selection-start-column="0" selection-end-line="71" selection-end-column="0" />
+        <state relative-caret-position="957">
+          <caret line="68" column="25" lean-forward="true" selection-start-line="68" selection-start-column="25" selection-end-line="68" selection-end-column="25" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>

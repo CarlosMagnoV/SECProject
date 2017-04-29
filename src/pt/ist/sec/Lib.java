@@ -47,6 +47,7 @@ public class Lib implements ClientInterface{
     private static String aesFile = System.getProperty("user.dir") + "\\clientData\\aesFile";
     private static String pastNonce = System.getProperty("user.dir") + "\\data\\nonce.txt";
     public Lib lib = this;
+    public int myId;
 
     public Lib(int port) throws Exception{
         client = (ClientInterface)this;
@@ -171,10 +172,10 @@ public class Lib implements ClientInterface{
         registerUser();
     }
 
-    public void setSessionKey(byte[] SessKey)throws Exception{
+    public void setSessionKey(byte[] SessKey, int id)throws Exception{
         byte[] SessBytes = DecryptionAssymmetric(SessKey);
-
         this.SessionKey = new SecretKeySpec(SessBytes,"AES");
+        this.myId = id;
     }
 
 
@@ -185,8 +186,11 @@ public class Lib implements ClientInterface{
 
     public void registerUser() throws Exception
     {
-        //stub.register(EncryptionAssymmetric(ClientPublicKey.getEncoded(),ServerPublicKey));
+
         stub.register(ClientPublicKey.getEncoded(),(ClientInterface)this);
+        System.out.println("I am ID: "+ myId);
+
+
     }
 
 
@@ -201,7 +205,7 @@ public class Lib implements ClientInterface{
         byte[] signatureNonce = makeDigitalSignature(nonce, (PrivateKey)ClientPrivateKey);
 
 
-        stub.put(cipher, signature, EncryptCommunication(nonce), signatureNonce);
+        stub.put(cipher, signature, EncryptCommunication(nonce), signatureNonce, myId);
     }
 
 

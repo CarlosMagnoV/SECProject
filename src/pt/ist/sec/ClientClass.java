@@ -19,10 +19,14 @@ public class ClientClass extends Server {
     public ArrayList<byte[]> usedNonces = new ArrayList<>();
     private byte[] signature;
     private int nonce;
+    public int id;
+    public SharedMemoryRegister myReg;
 
-    public ClientClass (SecretKey sessionKey, PublicKey pk){
+    public ClientClass (SecretKey sessionKey, PublicKey pk, int id, SharedMemoryRegister myReg){
         this.sessionKey = sessionKey;
         this.publicKey = pk;
+        this.id = id;
+        this.myReg = myReg;
     }
 
     protected void setPublicKey(PublicKey pubKey){

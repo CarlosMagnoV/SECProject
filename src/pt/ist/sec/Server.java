@@ -56,7 +56,7 @@ public class Server implements ServerInterface{
     public static ArrayList<Integer> portList = new ArrayList<>();
     public static SharedMemoryRegister reg;
     private static ServerInterface server;
-
+    public static int totalId = 0;
     public Server(){
 
     }
@@ -64,8 +64,8 @@ public class Server implements ServerInterface{
     public static void main(String[] args) {
 
         try {
-            getMyPublic();
             reg = new SharedMemoryRegister();
+            getMyPublic();
             System.out.println("connecting . . .");
             server = new Server();
             ServerInterface stub = (ServerInterface) UnicastRemoteObject.exportObject(server, 0);
@@ -112,22 +112,29 @@ public class Server implements ServerInterface{
 
     }
 
-    public void registerDeliver(byte[] sessKey, PublicKey pKey)throws Exception{
+    public void registerDeliver(byte[] sessKey, PublicKey pKey, int id)throws Exception{
         byte[] clientSession = DecryptionAssymmetric(sessKey);
         SecretKey originalKey = new SecretKeySpec(clientSession,"AES");
-        ClientClass c = new ClientClass(originalKey, pKey);
-        clientList.add(c);
+        addClient(pKey.getEncoded(),originalKey, id);
         System.out.println("Cliente adicionado");
     }
 
-    public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts)throws Exception{
+    public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts, int id)throws Exception{
         amWriter = false;
-        reg.targetDeliver(message, signature, nonce, signatureNonce, wts, Integer.parseInt(myPort));
-        System.out.println("Recieved :" + printBase64Binary(message));
+        for(ClientClass c : clientList) {
+            if(c.id == id) {
+                c.myReg.targetDeliver(message, signature, nonce, signatureNonce, wts, Integer.parseInt(myPort), id);
+                System.out.println("Recieved :" + printBase64Binary(message));
+            }
+        }
     }
 
-    public void ackReturn(int wts, int port){
-        reg.Deliver(wts, port);
+    public void ackReturn(int wts, int port, int id){
+        for(ClientClass c : clientList) {
+            if(c.id == id) {
+                c.myReg.Deliver(wts, port);
+            }
+        }
     }
 
     public byte[] DecryptionAssymmetric(byte[] ciphertext) throws Exception {
@@ -370,7 +377,7 @@ public class Server implements ServerInterface{
         return 1;
     }
 
-    public  void put(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce) throws Exception{
+    public  void put(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce , int id) throws Exception{
 
         byte[] pKeyBytes = null;
         byte[] restMsg = null;
@@ -378,23 +385,25 @@ public class Server implements ServerInterface{
         ClientClass client = clientList.get(0);
 
         if(amWriter) {
-            reg.write(message, signature, nonce, signatureNonce);
+            for(ClientClass c : clientList) {
+                if(c.id == id) {
+                    c.myReg.write(message, signature, nonce, signatureNonce, id);
+                }
+            }
         }
 
         for(ClientClass element: clientList) {
 
-            try {
+            if(element.id == id) {
+
                 byte[] Bmsg = DecryptCommunication(message, element.getSessionKey());
-                pKeyBytes = copyOfRange(Bmsg,0,294); // parte da chave publica
+                pKeyBytes = copyOfRange(Bmsg, 0, 294); // parte da chave publica
                 restMsg = copyOfRange(Bmsg, 294, Bmsg.length); // resto dos argumentos
                 decryptNonce = DecryptCommunication(nonce, element.getSessionKey());
                 client = element;
-
-                }
-                catch(Throwable e){
-
-                }
             }
+        }
+
             //if(pKeyBytes == null){}
 
         PublicKey ClientPublicKey = null;
@@ -707,14 +716,20 @@ public class Server implements ServerInterface{
         
         //decipheredPubK = DecryptionAssymmetric(pubKey,ServerPublicKey);
         byte[] decipheredPubK = pubKey;
-
         SecretKey SessKey = generateSession();
-        addClient(decipheredPubK,SessKey);
+
+        Lock lock = new ReentrantLock();
+        lock.lock();
+        totalId ++;
+        int id = totalId; // we copy global totalID to a local id to pass to the client
+        addClient(decipheredPubK,SessKey, totalId);
+        lock.unlock();
+
         PublicKey decipheredKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decipheredPubK));
-        reg.broadcastRegister(EncryptionAssymmetric(SessKey.getEncoded(), ServerPublicKey), decipheredKey);
+        reg.broadcastRegister(EncryptionAssymmetric(SessKey.getEncoded(), ServerPublicKey), decipheredKey, id);
         //pass the session key to client
         c.setSessionKey(EncryptionAssymmetric(SessKey.getEncoded(),
-                KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decipheredPubK)))
+                KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decipheredPubK))), id
                 );
 
         for(ClientClass client: clientList){
@@ -736,15 +751,14 @@ public class Server implements ServerInterface{
 
     }
 
-    private void addClient(byte[] clientPublicKey, SecretKey sessionKey){
-        Lock lock = new ReentrantLock();
-        lock.lock();
+    private void addClient(byte[] clientPublicKey, SecretKey sessionKey, int id){
+
+        SharedMemoryRegister reg = new SharedMemoryRegister();
         try {
-            clientList.add(new ClientClass(sessionKey, KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(clientPublicKey))));
+            clientList.add(new ClientClass(sessionKey, KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(clientPublicKey)),id, reg));
         }catch(Exception e){
             System.out.println("Error adding client: "+ e);
         }
-        lock.unlock();
     }
 
 

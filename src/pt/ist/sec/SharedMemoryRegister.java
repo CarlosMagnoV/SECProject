@@ -28,15 +28,15 @@ public class SharedMemoryRegister extends Server {
         acks = 0;
     }
 
-    public void write(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce) {
+    public void write(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) {
         wts++;
         acks = 0;
-        broadcastWrite(message, signature, nonce, signatureNonce, wts);
+        broadcastWrite(message, signature, nonce, signatureNonce, wts , id);
     }
-    public void broadcastWrite(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts){
+    public void broadcastWrite(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts, int id){
         try{
             for (int p : portList) {
-                getReplica(p).writeReturn(message, signature, nonce, signatureNonce, wts);
+                getReplica(p).writeReturn(message, signature, nonce, signatureNonce, wts, id);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -44,18 +44,18 @@ public class SharedMemoryRegister extends Server {
 
     }
 
-    public void targetDeliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts, int port)throws Exception{
+    public void targetDeliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts, int port, int id)throws Exception{
         if(wts> this.wts){
             this.wts = wts;
             this.message = message;
-            super.put(message, signature, nonce, signatureNonce);
-            sendAck(wts, port);
+            super.put(message, signature, nonce, signatureNonce, id);
+            sendAck(wts, port, id);
         }
     }
 
-    public void sendAck(int wts, int port) {
+    public void sendAck(int wts, int port, int id) {
         try {
-            getReplica(port).ackReturn(wts, port);
+            getReplica(port).ackReturn(wts, port, id);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -82,11 +82,11 @@ public class SharedMemoryRegister extends Server {
     }
 
 
-    public void broadcastRegister(byte[] sess, PublicKey pubK) throws Exception {
+    public void broadcastRegister(byte[] sess, PublicKey pubK, int id) throws Exception {
         for (int p : portList) {
             System.out.println("Broadcasting to " + p);
 
-            getReplica(p).registerDeliver(sess, pubK);
+            getReplica(p).registerDeliver(sess, pubK, id);
         }
     }
 }
