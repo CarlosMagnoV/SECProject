@@ -9,23 +9,28 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class SharedMemoryRegister extends Server {
 
-    byte[] message;
-    public String ts;
-    public List<String> readlist = new ArrayList<>();
+    ReadListReplicas value;
+    List<ReadListReplicas> readList;
+    //List<Integer> timestamps;
+
+    public int ts;
     public int rid;
     public int wts;
     public int acks;
 
     public SharedMemoryRegister() {
 
-        message = null;
-        ts = "";
         rid = 0;
         wts = 0;
         acks = 0;
+        value = new ReadListReplicas();
+        readList = new ArrayList<>();
+        //timestamps = new ArrayList<>();
     }
 
     public void write(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) {
@@ -33,6 +38,7 @@ public class SharedMemoryRegister extends Server {
         acks = 0;
         broadcastWrite(message, signature, nonce, signatureNonce, wts , id);
     }
+
     public void broadcastWrite(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts, int id){
         try{
             for (int p : portList) {
@@ -41,14 +47,15 @@ public class SharedMemoryRegister extends Server {
         }catch (Exception e){
             e.printStackTrace();
         }
-
     }
 
     public void targetDeliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts, int port, int id)throws Exception{
         if(wts> this.wts){
-            this.wts = wts;
-            this.message = message;
-            super.put(message, signature, nonce, signatureNonce, id);
+            value.message = message;
+            value.signature = signature;
+            value.nonce = nonce;
+            value.signatureNonce = signatureNonce;
+            value.ts = wts;
             sendAck(wts, port, id);
         }
     }
@@ -61,13 +68,57 @@ public class SharedMemoryRegister extends Server {
             e.printStackTrace();
         }
     }
-    public void Deliver(int wts, int port)
+    public void deliver(int wts, int port)
     {
         if(wts == this.wts){
             acks++;
-            if(acks == 2){ // 2 é o número total se servers, força a fazer deliver
+            if(acks > portList.size()/2){
                 acks = 0;
                 return;
+            }
+        }
+        // DO NOT DELIVER HERE
+    }
+
+    public void read(int port, int id){
+        rid++;
+        readList = null;
+        broadcatRead(rid, port, id);
+    }
+
+    public void broadcatRead(int rid, int port, int id){
+        try{
+            for (int p : portList) {
+                getReplica(p).readReturn(rid, port, id);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void targetReadDeliver(int rid, int port, int id)throws Exception{
+        getReplica(port).sendValue(rid, port, id, value);
+    }
+
+    public void deliverRead(int rid, ReadListReplicas value ){
+        if(this.rid == rid){
+            Lock lock = new ReentrantLock();
+            lock.lock();
+            readList.add(value);
+            lock.unlock();
+            if(readList.size() > portList.size()/2){
+                int currentTs= value.ts;
+                int index = 0;
+                int indexMax = 0;
+                for (ReadListReplicas auxVal: readList){
+                    if(currentTs<=auxVal.ts){
+                        currentTs=auxVal.ts;
+                        indexMax = index;
+                    }
+                    index++;
+                }
+                this.value = readList.get(indexMax);
+                readList = null;
             }
 
         }
@@ -80,6 +131,8 @@ public class SharedMemoryRegister extends Server {
         ServerInterface stub = (ServerInterface) registry.lookup("" + port);
         return stub;
     }
+
+
 
 
     public void broadcastRegister(byte[] sess, PublicKey pubK, byte[] id) throws Exception {

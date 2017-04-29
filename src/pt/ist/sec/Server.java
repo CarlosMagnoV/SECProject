@@ -1,6 +1,8 @@
 package pt.ist.sec;
 
 
+import com.sun.deploy.util.SessionState;
+
 import javax.crypto.*;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
@@ -134,7 +136,23 @@ public class Server implements ServerInterface{
     public void ackReturn(int wts, int port, int id){
         for(ClientClass c : clientList) {
             if(c.id == id) {
-                c.myReg.Deliver(wts, port);
+                c.myReg.deliver(wts, port);
+            }
+        }
+    }
+
+    public void readReturn(int rid, int port, int id)throws Exception{
+        for(ClientClass c : clientList) {
+            if(c.id == id) {
+                c.myReg.targetReadDeliver(rid,port,id);
+            }
+        }
+    }
+
+    public void sendValue(int rid, int port, int id, ReadListReplicas value)throws Exception{
+        for(ClientClass c : clientList) {
+            if(c.id == id) {
+                c.myReg.deliverRead(rid, value);
             }
         }
     }
@@ -437,8 +455,6 @@ public class Server implements ServerInterface{
             String domainString = domFinal;
             String usernameString = usrFinal;
 
-
-
             storeData(pass,pKeyString,domainString,usernameString);
 
 
@@ -530,8 +546,48 @@ public class Server implements ServerInterface{
         }
     }
 
-    public byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce){
-        byte[] password = get2(message, signature, nonce, signatureNonce);
+
+    public byte[] getDigitalSignature(byte[] PublicKey){
+
+        ClientClass client = null;
+
+        for(ClientClass element: clientList){
+
+            try {
+                DecryptCommunication(PublicKey, element.getSessionKey());
+                client = element;
+            }
+            catch(Exception e){
+
+            }
+
+        }
+
+        try {
+            return EncryptCommunication(client.getLastSignature(), client.getSessionKey());
+        }
+        catch(Exception e){
+            System.out.println("Error retrieving digital signature: " + e);
+            return null;
+        }
+    }
+    public byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id){
+
+        SharedMemoryRegister obj = new SharedMemoryRegister();
+
+        byte[] password = null;
+        if(portList.size() == 0) { // Se não houver replicas, lemos do ficheiro
+            password = get2(message, signature, nonce, signatureNonce);
+        }else{
+            for(ClientClass c : clientList) {
+                if(c.id == id) {
+                    c.myReg.read(Integer.parseInt(myPort), id);
+                    obj = c.myReg;
+                }
+            }
+             password = get2(obj.value.message, obj.value.signature, obj.value.nonce, obj.value.signatureNonce);
+        }
+
         ClientClass client = null;
 
         for(ClientClass element: clientList){
@@ -575,32 +631,6 @@ public class Server implements ServerInterface{
 
 
     }
-
-    public byte[] getDigitalSignature(byte[] PublicKey){
-
-        ClientClass client = null;
-
-        for(ClientClass element: clientList){
-
-            try {
-                DecryptCommunication(PublicKey, element.getSessionKey());
-                client = element;
-            }
-            catch(Exception e){
-
-            }
-
-        }
-
-        try {
-            return EncryptCommunication(client.getLastSignature(), client.getSessionKey());
-        }
-        catch(Exception e){
-            System.out.println("Error retrieving digital signature: " + e);
-            return null;
-        }
-    }
-
 
     public byte[] get2( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce){
 

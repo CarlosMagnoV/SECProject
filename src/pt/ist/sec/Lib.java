@@ -225,7 +225,7 @@ public class Lib implements ClientInterface{
 
         byte[] helper = null;
 
-        helper = stub.get(cipher, signature, EncryptCommunication(nonce), signatureNonce);
+        helper = stub.get(cipher, signature, EncryptCommunication(nonce), signatureNonce, myId);
 
         if(helper == null){
             nonceValue = nonceValue + 10;
