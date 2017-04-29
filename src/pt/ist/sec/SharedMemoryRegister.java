@@ -82,7 +82,7 @@ public class SharedMemoryRegister extends Server {
     }
 
 
-    public void broadcastRegister(byte[] sess, PublicKey pubK, int id) throws Exception {
+    public void broadcastRegister(byte[] sess, PublicKey pubK, byte[] id) throws Exception {
         for (int p : portList) {
             System.out.println("Broadcasting to " + p);
 

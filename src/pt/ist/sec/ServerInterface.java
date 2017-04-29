@@ -14,7 +14,7 @@ public interface ServerInterface extends Remote{
     byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce) throws RemoteException;
     byte[] getDigitalSignature(byte[] PublicKey) throws Exception;
     void register(byte[] pubKey, ClientInterface c) throws Exception;
-    void registerDeliver(byte[] sessKey, PublicKey pKey, int id)throws Exception;
+    void registerDeliver(byte[] sessKey, PublicKey pKey, byte[] id)throws Exception;
     void registerServer(String port) throws Exception;
     void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts, int id) throws Exception;
     void ackReturn(int wts, int port, int id) throws Exception;

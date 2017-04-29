@@ -10,6 +10,7 @@ import java.io.*;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.MulticastChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -112,11 +113,12 @@ public class Server implements ServerInterface{
 
     }
 
-    public void registerDeliver(byte[] sessKey, PublicKey pKey, int id)throws Exception{
+    public void registerDeliver(byte[] sessKey, PublicKey pKey, byte[] id)throws Exception{
         byte[] clientSession = DecryptionAssymmetric(sessKey);
         SecretKey originalKey = new SecretKeySpec(clientSession,"AES");
-        addClient(pKey.getEncoded(),originalKey, id);
-        System.out.println("Cliente adicionado");
+        byte[] clearId = DecryptionAssymmetric(id);
+        addClient(pKey.getEncoded(),originalKey, Integer.parseInt(new String(clearId)));
+        System.out.println("Cliente adicionado com ID: " + Integer.parseInt(new String(clearId)));
     }
 
     public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts, int id)throws Exception{
@@ -712,28 +714,25 @@ public class Server implements ServerInterface{
 
     public void register(byte[] pubKey, ClientInterface c) throws Exception{
 
-        //Decifrar chave publica
-        
-        //decipheredPubK = DecryptionAssymmetric(pubKey,ServerPublicKey);
-        byte[] decipheredPubK = pubKey;
+
         SecretKey SessKey = generateSession();
 
         Lock lock = new ReentrantLock();
         lock.lock();
         totalId ++;
         int id = totalId; // we copy global totalID to a local id to pass to the client
-        addClient(decipheredPubK,SessKey, totalId);
+        addClient(pubKey,SessKey, totalId);
         lock.unlock();
 
-        PublicKey decipheredKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decipheredPubK));
-        reg.broadcastRegister(EncryptionAssymmetric(SessKey.getEncoded(), ServerPublicKey), decipheredKey, id);
+        PublicKey realClientPubKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pubKey));
+
+        reg.broadcastRegister(EncryptionAssymmetric(SessKey.getEncoded(), ServerPublicKey), realClientPubKey, EncryptionAssymmetric(Integer.toString(id).getBytes(),ServerPublicKey));
         //pass the session key to client
-        c.setSessionKey(EncryptionAssymmetric(SessKey.getEncoded(),
-                KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decipheredPubK))), id
-                );
+        // FALTA DIGITAL SIGNATURE!!!!!!!!!!!!!!!!!!!!!!!!!!
+        c.setSessionKey(EncryptionAssymmetric(SessKey.getEncoded(),realClientPubKey),EncryptionAssymmetric(Integer.toString(id).getBytes(),realClientPubKey));
 
         for(ClientClass client: clientList){
-            if(client.getPublicKey().equals(decipheredKey) && client.getSessionKey().equals(SessKey)){
+            if(client.getPublicKey().equals(realClientPubKey) && client.getSessionKey().equals(SessKey)){
                 int newNonce = Integer.parseInt(new String(DecryptCommunication(c.getNonce(), SessKey), "ASCII"));
                 client.setNonce(newNonce);
             }

@@ -172,10 +172,11 @@ public class Lib implements ClientInterface{
         registerUser();
     }
 
-    public void setSessionKey(byte[] SessKey, int id)throws Exception{
+    public void setSessionKey(byte[] SessKey, byte[] id)throws Exception{
         byte[] SessBytes = DecryptionAssymmetric(SessKey);
         this.SessionKey = new SecretKeySpec(SessBytes,"AES");
-        this.myId = id;
+        byte[] clearId = DecryptionAssymmetric(id);
+        this.myId = Integer.parseInt(new String(clearId));
     }
 
 
