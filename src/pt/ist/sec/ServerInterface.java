@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.Timestamp;
 
 public interface ServerInterface extends Remote{
 
@@ -16,8 +17,8 @@ public interface ServerInterface extends Remote{
     void register(byte[] pubKey, ClientInterface c) throws Exception;
     void registerDeliver(byte[] sessKey, PublicKey pKey, byte[] id)throws Exception;
     void registerServer(String port) throws Exception;
-    void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts, int id) throws Exception;
+    void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, java.sql.Timestamp wts, int id) throws Exception;
     void readReturn(int rid, int port, int id) throws Exception;
-    void ackReturn(int wts, int port, int id) throws Exception;
+    void ackReturn(java.sql.Timestamp ts, int port, int id) throws Exception;
     void sendValue(int rid, int port, int id, ReadListReplicas value)throws Exception;
 }

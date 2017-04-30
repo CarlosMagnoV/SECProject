@@ -31,10 +31,13 @@ import java.security.cert.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 
 import static java.util.Arrays.copyOfRange;
 import static javax.xml.bind.DatatypeConverter.*;
@@ -60,11 +63,17 @@ public class Server implements ServerInterface{
     public static SharedMemoryRegister reg;
     private static ServerInterface server;
     public static int totalId = 0;
+
     public Server(){
 
     }
 
     public static void main(String[] args) {
+
+        Timestamp t = new Timestamp(System.currentTimeMillis());
+        Timestamp t2 = null;
+        t2 = Timestamp.valueOf(t.toString());
+
 
         try {
             reg = new SharedMemoryRegister();
@@ -88,6 +97,7 @@ public class Server implements ServerInterface{
 
             java.security.cert.Certificate cert = keystore.getCertificate("server-alias");
             ServerPrivateKey = keystore.getKey("server-alias","changeit".toCharArray());
+
 
 
 
@@ -123,7 +133,7 @@ public class Server implements ServerInterface{
         System.out.println("Cliente adicionado com ID: " + Integer.parseInt(new String(clearId)));
     }
 
-    public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int wts, int id)throws Exception{
+    public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int id)throws Exception{
         amWriter = false;
         for(ClientClass c : clientList) {
             if(c.id == id) {
@@ -133,10 +143,10 @@ public class Server implements ServerInterface{
         }
     }
 
-    public void ackReturn(int wts, int port, int id){
+    public void ackReturn(Timestamp ts, int port, int id){
         for(ClientClass c : clientList) {
             if(c.id == id) {
-                c.myReg.deliver(wts, port);
+                c.myReg.deliver(ts, port);
             }
         }
     }
@@ -303,7 +313,7 @@ public class Server implements ServerInterface{
     }
 
 
-    public void storeData(byte[] pass, String pKeyString, String domainString, String usernameString)throws Exception{
+    public void storeData(byte[] pass, String pKeyString, String domainString, String usernameString, Timestamp ts)throws Exception{
         Lock lock = new ReentrantLock();
         lock.lock();
         String elements = domainString + " " + usernameString;
@@ -329,11 +339,15 @@ public class Server implements ServerInterface{
                     if (line.contains(usernameString)) {
                         writeByteCode(pass, Integer.parseInt(br.readLine()));
                         newData = false;
+                        lines.remove(i+4);
+                        lines.add(i+4, ts.toString());
                         break;
                     } else {
                         br.readLine();
+                        br.readLine();
                     }
                 } else {
+                    br.readLine();
                     br.readLine();
                     br.readLine();
                 }
@@ -341,12 +355,13 @@ public class Server implements ServerInterface{
                 br.readLine();
                 br.readLine();
                 br.readLine();
+                br.readLine();
             }
-            i += 4;
+            i += 5;
         }
         if (newData) {
             Files.write(Paths.get(DataFileLoc),
-                    (pKeyString + "\n" + domainString + "\n" + usernameString + "\n" + (getLastNumber()+1) + "\n").getBytes(),
+                    (pKeyString + "\n" + domainString + "\n" + usernameString + "\n" + (getLastNumber()+1) + "\n" + ts + "\n").getBytes(),
                     StandardOpenOption.APPEND);
             writeByteCode(pass, -1);
         } else {
@@ -397,20 +412,12 @@ public class Server implements ServerInterface{
         return 1;
     }
 
-    public  void put(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce , int id) throws Exception{
+    public void savePassword(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int id)throws Exception{
 
         byte[] pKeyBytes = null;
         byte[] restMsg = null;
         byte[] decryptNonce = null;
         ClientClass client = clientList.get(0);
-
-        if(amWriter) {
-            for(ClientClass c : clientList) {
-                if(c.id == id) {
-                    c.myReg.write(message, signature, nonce, signatureNonce, id);
-                }
-            }
-        }
 
         for(ClientClass element: clientList) {
 
@@ -424,29 +431,106 @@ public class Server implements ServerInterface{
             }
         }
 
-            //if(pKeyBytes == null){}
+        //if(pKeyBytes == null){}
 
         PublicKey ClientPublicKey = null;
 
+        ClientPublicKey =
+                KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pKeyBytes));
+
+        if(!verifyDigitalSignature(signature, message, ClientPublicKey)&&!verifyDigitalSignature(signatureNonce, decryptNonce, ClientPublicKey)){ //If true, signature checks
+            return;
+        }
+
+        storageSignture(client, signature);
+
+
+        if (!client.checkNonce(decryptNonce)) {
+            return;
+        }
+        String dom = new String(copyOfRange(restMsg, 0, 30), "ASCII");
+        String usr = new String(copyOfRange(restMsg, 30, 60), "ASCII");
+
+
+
+        byte[] pass = copyOfRange(restMsg, 60, restMsg.length);
+        String domFinal = rmPadd(dom.toCharArray());
+        String usrFinal = rmPadd(usr.toCharArray());
+
+
+        String pKeyString = printBase64Binary(pKeyBytes);
+        String domainString = domFinal;
+        String usernameString = usrFinal;
+
+        storeData(pass,pKeyString,domainString,usernameString, ts);
+
+
+    }
+
+    public  void put(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce , int id) throws Exception{
+
+            for(ClientClass c : clientList) {
+                if(c.id == id) {
+                    c.myReg.write(message, signature, nonce, signatureNonce, id);
+                    if(portList.size() == 0){
+                        savePassword(message,signature,nonce,signatureNonce, c.myReg.wts, id);
+                        Timestamp ts33 = getTimetamp(message,signature,nonce,signatureNonce);
+                        System.out.println(ts33);
+                    }
+                }
+            }
+
+    }
+
+
+    public Timestamp getTimetamp(byte[] message,byte[]signature,byte[] nonce,byte[] signatureNonce){
+
+        byte[] pKeyBytes = null;
+        ClientClass client = clientList.get(0);
+        byte[] restMsg = null;
+        byte[] decryptNonce = null;
+        for(ClientClass element: clientList) {
+
+
+
+            try {
+                byte[] Bmsg = DecryptCommunication(message, element.getSessionKey());
+                pKeyBytes = copyOfRange(Bmsg,0,294); // parte da chave publica
+                restMsg = copyOfRange(Bmsg, 294, Bmsg.length); // resto dos argumentos
+                decryptNonce = DecryptCommunication(nonce, element.getSessionKey());
+                client = element;
+
+            }
+            catch(Throwable e){
+
+            }
+        }
+        if(pKeyBytes == null){return null;}
+
+        PublicKey ClientPublicKey = null;
+        try {
             ClientPublicKey =
                     KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pKeyBytes));
 
             if(!verifyDigitalSignature(signature, message, ClientPublicKey)&&!verifyDigitalSignature(signatureNonce, decryptNonce, ClientPublicKey)){ //If true, signature checks
-                return;
+                return null;
             }
 
             storageSignture(client, signature);
 
-
-            if (!client.checkNonce(decryptNonce)) {
-                return;
+            if(!client.checkNonce(decryptNonce)){
+                //return null;
             }
+
+        }
+        catch(Exception e){
+            System.err.println("(Retrieve)Signature error: " + e.toString());
+            e.printStackTrace();
+        }
+
+        try {
             String dom = new String(copyOfRange(restMsg, 0, 30), "ASCII");
-            String usr = new String(copyOfRange(restMsg, 30, 60), "ASCII");
-
-
-
-            byte[] pass = copyOfRange(restMsg, 60, restMsg.length);
+            String usr = new String(copyOfRange(restMsg, 30, restMsg.length), "ASCII");
             String domFinal = rmPadd(dom.toCharArray());
             String usrFinal = rmPadd(usr.toCharArray());
 
@@ -455,9 +539,59 @@ public class Server implements ServerInterface{
             String domainString = domFinal;
             String usernameString = usrFinal;
 
-            storeData(pass,pKeyString,domainString,usernameString);
+            //String elements = domainString+" "+usernameString;
 
 
+            File file = new File(DataFileLoc);
+            FileReader fileReader = new FileReader(file);
+            BufferedReader br = new BufferedReader(fileReader);
+            String line;
+            Path path = Paths.get(DataFileLoc);
+
+            Charset charset = Charset.forName("ISO-8859-1");
+
+            List<String> lines = Files.readAllLines(path,charset);
+
+            int i=0;
+            Boolean newData = true;
+            while((line = br.readLine()) != null){
+                if(line.contains(pKeyString)){
+                    line = br.readLine();
+                    if (line.contains(domainString)) {
+                        line = br.readLine();
+                        if (line.contains(usernameString)){
+                            line = br.readLine();
+                            line = br.readLine();
+                            return Timestamp.valueOf(line);
+                        }
+                        else{
+                            br.readLine();
+                            br.readLine();
+                        }
+                    }
+                    else{
+                        br.readLine();
+                        br.readLine();
+                        br.readLine();
+                    }
+                }
+                else{
+                    br.readLine();
+                    br.readLine();
+                    br.readLine();
+                    br.readLine();
+                }
+                i+=5;
+            }
+
+        }
+        catch (Exception e){
+            System.out.println("Error: Couldn't locate the file.");
+            e.printStackTrace();
+            return null;
+        }
+
+        return null;
     }
 
     private int getLastNumber(){
@@ -475,6 +609,7 @@ public class Server implements ServerInterface{
                     line = br.readLine();
                 }
                 number = Integer.parseInt(br.readLine());
+                br.readLine();
             }
 
             return number;
@@ -577,7 +712,7 @@ public class Server implements ServerInterface{
 
         byte[] password = null;
         if(portList.size() == 0) { // Se não houver replicas, lemos do ficheiro
-            password = get2(message, signature, nonce, signatureNonce);
+            password = getPass(message, signature, nonce, signatureNonce);
         }else{
             for(ClientClass c : clientList) {
                 if(c.id == id) {
@@ -585,7 +720,7 @@ public class Server implements ServerInterface{
                     obj = c.myReg;
                 }
             }
-             password = get2(obj.value.message, obj.value.signature, obj.value.nonce, obj.value.signatureNonce);
+             password = getPass(obj.value.message, obj.value.signature, obj.value.nonce, obj.value.signatureNonce);
         }
 
         ClientClass client = null;
@@ -632,7 +767,7 @@ public class Server implements ServerInterface{
 
     }
 
-    public byte[] get2( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce){
+    public byte[] getPass( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce){
 
         byte[] pKeyBytes = null;
         ClientClass client = clientList.get(0);
@@ -716,9 +851,11 @@ public class Server implements ServerInterface{
                         }
                         else{
                             br.readLine();
+                            br.readLine();
                         }
                     }
                     else{
+                        br.readLine();
                         br.readLine();
                         br.readLine();
                     }
@@ -727,8 +864,9 @@ public class Server implements ServerInterface{
                     br.readLine();
                     br.readLine();
                     br.readLine();
+                    br.readLine();
                 }
-                i+=4;
+                i+=5;
             }
 
         }
