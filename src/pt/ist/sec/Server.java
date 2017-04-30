@@ -70,11 +70,6 @@ public class Server implements ServerInterface{
 
     public static void main(String[] args) {
 
-        Timestamp t = new Timestamp(System.currentTimeMillis());
-        Timestamp t2 = null;
-        t2 = Timestamp.valueOf(t.toString());
-
-
         try {
             reg = new SharedMemoryRegister();
             getMyPublic();
@@ -125,28 +120,32 @@ public class Server implements ServerInterface{
 
     }
 
-    public void registerDeliver(byte[] sessKey, PublicKey pKey, byte[] id)throws Exception{
+    public void registerDeliver(byte[] sessKey, PublicKey pKey, byte[] id, int nonce)throws Exception{
         byte[] clientSession = DecryptionAssymmetric(sessKey);
         SecretKey originalKey = new SecretKeySpec(clientSession,"AES");
         byte[] clearId = DecryptionAssymmetric(id);
         addClient(pKey.getEncoded(),originalKey, Integer.parseInt(new String(clearId)));
+        for(ClientClass client: clientList){
+            if(client.id == Integer.parseInt(new String(clearId))){
+                client.setNonce(nonce);
+            }
+        }
         System.out.println("Cliente adicionado com ID: " + Integer.parseInt(new String(clearId)));
     }
 
-    public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int id)throws Exception{
+    public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int port, int id)throws Exception{
         amWriter = false;
         for(ClientClass c : clientList) {
             if(c.id == id) {
-                c.myReg.targetDeliver(message, signature, nonce, signatureNonce, wts, Integer.parseInt(myPort), id);
-                System.out.println("Recieved :" + printBase64Binary(message));
+                c.myReg.targetDeliver(message, signature, nonce, signatureNonce, wts, port, id);
             }
         }
     }
 
-    public void ackReturn(Timestamp ts, int port, int id){
+    public void ackReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id) throws Exception{
         for(ClientClass c : clientList) {
             if(c.id == id) {
-                c.myReg.deliver(ts, port);
+                c.myReg.deliver(message, signature, nonce, signatureNonce, ts, port, id);
             }
         }
     }
@@ -325,6 +324,7 @@ public class Server implements ServerInterface{
         String line;
         Path path = Paths.get(DataFileLoc);
 
+
         Charset charset = Charset.forName("ISO-8859-1");
 
         List<String> lines = Files.readAllLines(path, charset);
@@ -474,8 +474,6 @@ public class Server implements ServerInterface{
                     c.myReg.write(message, signature, nonce, signatureNonce, id);
                     if(portList.size() == 0){
                         savePassword(message,signature,nonce,signatureNonce, c.myReg.wts, id);
-                        Timestamp ts33 = getTimetamp(message,signature,nonce,signatureNonce);
-                        System.out.println(ts33);
                     }
                 }
             }
@@ -506,27 +504,6 @@ public class Server implements ServerInterface{
             }
         }
         if(pKeyBytes == null){return null;}
-
-        PublicKey ClientPublicKey = null;
-        try {
-            ClientPublicKey =
-                    KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pKeyBytes));
-
-            if(!verifyDigitalSignature(signature, message, ClientPublicKey)&&!verifyDigitalSignature(signatureNonce, decryptNonce, ClientPublicKey)){ //If true, signature checks
-                return null;
-            }
-
-            storageSignture(client, signature);
-
-            if(!client.checkNonce(decryptNonce)){
-                //return null;
-            }
-
-        }
-        catch(Exception e){
-            System.err.println("(Retrieve)Signature error: " + e.toString());
-            e.printStackTrace();
-        }
 
         try {
             String dom = new String(copyOfRange(restMsg, 0, 30), "ASCII");
@@ -894,17 +871,19 @@ public class Server implements ServerInterface{
 
         PublicKey realClientPubKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pubKey));
 
-        reg.broadcastRegister(EncryptionAssymmetric(SessKey.getEncoded(), ServerPublicKey), realClientPubKey, EncryptionAssymmetric(Integer.toString(id).getBytes(),ServerPublicKey));
+
         //pass the session key to client
         // FALTA DIGITAL SIGNATURE!!!!!!!!!!!!!!!!!!!!!!!!!!
         c.setSessionKey(EncryptionAssymmetric(SessKey.getEncoded(),realClientPubKey),EncryptionAssymmetric(Integer.toString(id).getBytes(),realClientPubKey));
-
+        int newNonce = 0;
         for(ClientClass client: clientList){
             if(client.getPublicKey().equals(realClientPubKey) && client.getSessionKey().equals(SessKey)){
-                int newNonce = Integer.parseInt(new String(DecryptCommunication(c.getNonce(), SessKey), "ASCII"));
+                 newNonce = Integer.parseInt(new String(DecryptCommunication(c.getNonce(), SessKey), "ASCII"));
                 client.setNonce(newNonce);
             }
         }
+
+        reg.broadcastRegister(EncryptionAssymmetric(SessKey.getEncoded(), ServerPublicKey), realClientPubKey, EncryptionAssymmetric(Integer.toString(id).getBytes(),ServerPublicKey), newNonce);
     }
 
 

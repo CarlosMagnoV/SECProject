@@ -35,7 +35,7 @@ public class SharedMemoryRegister extends Server {
     }
 
     public void write(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) {
-        wts = new Timestamp(System.currentTimeMillis());;
+        wts = new Timestamp(System.currentTimeMillis());
         acks = 0;
         broadcastWrite(message, signature, nonce, signatureNonce, wts , id);
     }
@@ -43,7 +43,7 @@ public class SharedMemoryRegister extends Server {
     public void broadcastWrite(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int id){
         try{
             for (int p : portList) {
-                getReplica(p).writeReturn(message, signature, nonce, signatureNonce, wts, id);
+                getReplica(p).writeReturn(message, signature, nonce, signatureNonce, wts, Integer.parseInt(super.myPort), id);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -51,31 +51,36 @@ public class SharedMemoryRegister extends Server {
     }
 
     public void targetDeliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id)throws Exception{
-        if(ts.after(getTimetamp(message,signature,nonce,signatureNonce))){
-
-            sendAck(ts, port, id);
+        if(getTimetamp(message,signature,nonce,signatureNonce) != null) {
+            if (ts.after(getTimetamp(message, signature, nonce, signatureNonce))) {
+                savePassword(message, signature, nonce, signatureNonce, ts, id);
+                sendAck(message, signature, nonce, signatureNonce, ts, port, id);
+            }
+        }
+        else{
+            savePassword(message, signature, nonce, signatureNonce, ts, id);
+            sendAck(message, signature, nonce, signatureNonce, ts, port, id);
         }
     }
 
-    public void sendAck(Timestamp ts, int port, int id) {
+    public void sendAck(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id) {
         try {
-            getReplica(port).ackReturn(ts, port, id);
+            getReplica(port).ackReturn(message, signature, nonce, signatureNonce, ts, port, id);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    public void deliver(Timestamp ts, int port)
+    public void deliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id) throws Exception
     {
         if(ts.equals(this.wts)){
             acks++;
-            if(acks > portList.size()/2){
+            if(acks > portList.size()/2 || portList.size() == 1){
                 acks = 0;
-                //put
+                savePassword(message, signature, nonce, signatureNonce, ts, id);
             }
-            return;
         }
-        // DO NOT DELIVER HERE
+
     }
 
     public void read(int port, int id){
@@ -133,11 +138,10 @@ public class SharedMemoryRegister extends Server {
 
 
 
-    public void broadcastRegister(byte[] sess, PublicKey pubK, byte[] id) throws Exception {
+    public void broadcastRegister(byte[] sess, PublicKey pubK, byte[] id, int nonce) throws Exception {
         for (int p : portList) {
-            System.out.println("Broadcasting to " + p);
 
-            getReplica(p).registerDeliver(sess, pubK, id);
+            getReplica(p).registerDeliver(sess, pubK, id, nonce);
         }
     }
 }

@@ -15,10 +15,10 @@ public interface ServerInterface extends Remote{
     byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) throws RemoteException;
     byte[] getDigitalSignature(byte[] PublicKey) throws Exception;
     void register(byte[] pubKey, ClientInterface c) throws Exception;
-    void registerDeliver(byte[] sessKey, PublicKey pKey, byte[] id)throws Exception;
+    void registerDeliver(byte[] sessKey, PublicKey pKey, byte[] id, int nonce)throws Exception;
     void registerServer(String port) throws Exception;
-    void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, java.sql.Timestamp wts, int id) throws Exception;
+    void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, java.sql.Timestamp wts, int port, int id) throws Exception;
     void readReturn(int rid, int port, int id) throws Exception;
-    void ackReturn(java.sql.Timestamp ts, int port, int id) throws Exception;
+    void ackReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, java.sql.Timestamp ts, int port, int id) throws Exception;
     void sendValue(int rid, int port, int id, ReadListReplicas value)throws Exception;
 }
