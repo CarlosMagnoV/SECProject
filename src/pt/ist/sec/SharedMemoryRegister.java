@@ -7,6 +7,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.PublicKey;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,10 +17,9 @@ import java.util.concurrent.locks.ReentrantLock;
 public class SharedMemoryRegister extends Server {
 
     ReadListReplicas value;
-    List<ReadListReplicas> readList;
+    List<ReadListReplicas> readList = new ArrayList<>();
     //List<Integer> timestamps;
 
-    public int ts;
     public int rid;
     public Timestamp wts;
     public int acks;
@@ -29,8 +29,7 @@ public class SharedMemoryRegister extends Server {
         rid = 0;
         wts = null;
         acks = 0;
-        value = new ReadListReplicas();
-        readList = new ArrayList<>();
+        value = null;
         //timestamps = new ArrayList<>();
     }
 
@@ -83,45 +82,53 @@ public class SharedMemoryRegister extends Server {
 
     }
 
-    public void read(int port, int id){
+    public void read( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int port, int id){
         rid++;
-        readList = null;
-        broadcatRead(rid, port, id);
+        readList = new ArrayList<>();
+        byte[]readerPassword = getPass(message,signature,nonce,signatureNonce); //Para adicionar o seu valor da password na readlist para efeitos de posterior comparação
+        Timestamp ts = getTimetamp(message,signature,nonce,signatureNonce);
+        ReadListReplicas value = new ReadListReplicas(readerPassword, ts);
+        readList.add(value);
+        broadcatRead(message, signature, nonce, signatureNonce,rid, port, id);
     }
 
-    public void broadcatRead(int rid, int port, int id){
+    public void broadcatRead( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int rid, int port, int id){
         try{
             for (int p : portList) {
-                getReplica(p).readReturn(rid, port, id);
+                getReplica(p).readReturn(message,signature,nonce,signatureNonce,rid, port, id);
             }
         }catch (Exception e){
             e.printStackTrace();
         }
     }
 
-    public void targetReadDeliver(int rid, int port, int id)throws Exception{
-        getReplica(port).sendValue(rid, port, id, value);
+    public void targetReadDeliver( byte[] password, Timestamp ts, int rid, int port, int id)throws Exception{
+
+        getReplica(port).sendValue(rid, id, password, ts);
     }
 
-    public void deliverRead(int rid, ReadListReplicas value ){
+    public void deliverRead(int rid, byte[] password, Timestamp ts){
         if(this.rid == rid){
             Lock lock = new ReentrantLock();
             lock.lock();
-            readList.add(value);
+            ReadListReplicas newValue = new ReadListReplicas(password, ts);
+            readList.add(newValue);
             lock.unlock();
             if(readList.size() > portList.size()/2){
-                int currentTs= value.ts;
+                Timestamp currentTs = readList.get(0).ts;
                 int index = 0;
                 int indexMax = 0;
                 for (ReadListReplicas auxVal: readList){
-                    if(currentTs<=auxVal.ts){
+                    System.out.println(auxVal.ts.toString());
+                    if(currentTs.before(auxVal.ts)){
                         currentTs=auxVal.ts;
                         indexMax = index;
                     }
                     index++;
                 }
                 this.value = readList.get(indexMax);
-                readList = null;
+
+                readList = new ArrayList<>();
             }
 
         }

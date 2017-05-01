@@ -30,6 +30,7 @@ import java.security.*;
 import java.security.cert.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -108,8 +109,12 @@ public class Server implements ServerInterface{
         fileCreation(byteFile);
         fileCreation(SignFile);
 
-
-        while(true);
+        try {
+            while (true) Thread.sleep(Long.MAX_VALUE);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     public static void getMyPublic()throws Exception{
@@ -150,18 +155,21 @@ public class Server implements ServerInterface{
         }
     }
 
-    public void readReturn(int rid, int port, int id)throws Exception{
+    public void readReturn( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int rid, int port, int id)throws Exception{
         for(ClientClass c : clientList) {
             if(c.id == id) {
-                c.myReg.targetReadDeliver(rid,port,id);
+                byte[] password = getPass(message,signature,nonce,signatureNonce);
+                Timestamp ts = getTimetamp(message,signature,nonce,signatureNonce);
+                c.getNextNonce();
+                c.myReg.targetReadDeliver(password,ts,rid,port,id);
             }
         }
     }
 
-    public void sendValue(int rid, int port, int id, ReadListReplicas value)throws Exception{
+    public void sendValue(int rid, int id, byte[] password, Timestamp ts)throws Exception{
         for(ClientClass c : clientList) {
             if(c.id == id) {
-                c.myReg.deliverRead(rid, value);
+                c.myReg.deliverRead(rid, password, ts);
             }
         }
     }
@@ -683,23 +691,7 @@ public class Server implements ServerInterface{
             return null;
         }
     }
-    public byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id){
-
-        SharedMemoryRegister obj = new SharedMemoryRegister();
-
-        byte[] password = null;
-        if(portList.size() == 0) { // Se não houver replicas, lemos do ficheiro
-            password = getPass(message, signature, nonce, signatureNonce);
-        }else{
-            for(ClientClass c : clientList) {
-                if(c.id == id) {
-                    c.myReg.read(Integer.parseInt(myPort), id);
-                    obj = c.myReg;
-                }
-            }
-             password = getPass(obj.value.message, obj.value.signature, obj.value.nonce, obj.value.signatureNonce);
-        }
-
+    public byte[] retrievePassword(byte[] message, byte[] password){
         ClientClass client = null;
 
         for(ClientClass element: clientList){
@@ -741,7 +733,27 @@ public class Server implements ServerInterface{
 
         return null;
 
+    }
 
+    public byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id){
+
+        SharedMemoryRegister obj = new SharedMemoryRegister();
+
+        byte[] password = null;
+        if(portList.size() == 0) { // Se não houver replicas, lemos do ficheiro
+            password = getPass(message, signature, nonce, signatureNonce);
+        }else{
+            for(ClientClass c : clientList) {
+                if(c.id == id) {
+                    c.myReg.read(message, signature, nonce, signatureNonce, Integer.parseInt(myPort), id);
+                    obj = c.myReg;
+                }
+            }
+            password = obj.value.password;
+        }
+
+
+        return retrievePassword(message, password);
     }
 
     public byte[] getPass( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce){
