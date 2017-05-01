@@ -17,8 +17,8 @@ public interface ServerInterface extends Remote{
     void register(byte[] pubKey, ClientInterface c) throws Exception;
     void registerDeliver(byte[] sessKey, PublicKey pKey, byte[] id, int nonce)throws Exception;
     void registerServer(String port) throws Exception;
-    void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, java.sql.Timestamp wts, int port, int id) throws Exception;
-    void readReturn( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int rid, int port, int id) throws Exception;
+    void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, java.sql.Timestamp wts, int port, int id, byte[] writerSignature) throws Exception;
+    void readReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int rid, int port, int id) throws Exception;
     void ackReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id) throws Exception;
     void sendValue( int rid, int id, byte[] password, Timestamp ts)throws Exception;
 }

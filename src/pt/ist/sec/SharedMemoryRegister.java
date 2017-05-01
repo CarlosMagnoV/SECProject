@@ -23,6 +23,7 @@ public class SharedMemoryRegister extends Server {
     public int rid;
     public Timestamp wts;
     public int acks;
+    private byte[] writerSignature;
 
     public SharedMemoryRegister() {
 
@@ -30,34 +31,36 @@ public class SharedMemoryRegister extends Server {
         wts = null;
         acks = 0;
         value = null;
+        writerSignature = null;
         //timestamps = new ArrayList<>();
     }
 
-    public void write(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) {
+    public void write(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) throws Exception {
         wts = new Timestamp(System.currentTimeMillis());
         acks = 0;
-        broadcastWrite(message, signature, nonce, signatureNonce, wts , id);
+        writerSignature = makeServerDigitalSignature(message);
+        broadcastWrite(message, signature, nonce, signatureNonce, wts , id, writerSignature);
     }
 
-    public void broadcastWrite(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int id){
+    public void broadcastWrite(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int id, byte[] writerSignature){
         try{
             for (int p : portList) {
-                getReplica(p).writeReturn(message, signature, nonce, signatureNonce, wts, Integer.parseInt(super.myPort), id);
+                getReplica(p).writeReturn(message, signature, nonce, signatureNonce, wts, Integer.parseInt(super.myPort), id, writerSignature);
             }
         }catch (Exception e){
             e.printStackTrace();
         }
     }
 
-    public void targetDeliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id)throws Exception{
+    public void targetDeliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id, byte[] writerSignature)throws Exception{
         if(getTimetamp(message,signature,nonce,signatureNonce) != null) {
             if (ts.after(getTimetamp(message, signature, nonce, signatureNonce))) {
-                savePassword(message, signature, nonce, signatureNonce, ts, id);
+                savePassword(message, signature, nonce, signatureNonce, ts, id, writerSignature);
                 sendAck(message, signature, nonce, signatureNonce, ts, port, id);
             }
         }
         else{
-            savePassword(message, signature, nonce, signatureNonce, ts, id);
+            savePassword(message, signature, nonce, signatureNonce, ts, id, writerSignature);
             sendAck(message, signature, nonce, signatureNonce, ts, port, id);
         }
     }
@@ -76,7 +79,8 @@ public class SharedMemoryRegister extends Server {
             acks++;
             if(acks > portList.size()/2 || portList.size() == 1){
                 acks = 0;
-                savePassword(message, signature, nonce, signatureNonce, ts, id);
+                savePassword(message, signature, nonce, signatureNonce, ts, id, writerSignature);
+                writerSignature = null;
             }
         }
 

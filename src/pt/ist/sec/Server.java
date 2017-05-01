@@ -138,11 +138,11 @@ public class Server implements ServerInterface{
         System.out.println("Cliente adicionado com ID: " + Integer.parseInt(new String(clearId)));
     }
 
-    public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int port, int id)throws Exception{
+    public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int port, int id, byte[] writerSignature)throws Exception{
         amWriter = false;
         for(ClientClass c : clientList) {
             if(c.id == id) {
-                c.myReg.targetDeliver(message, signature, nonce, signatureNonce, wts, port, id);
+                c.myReg.targetDeliver(message, signature, nonce, signatureNonce, wts, port, id, writerSignature);
             }
         }
     }
@@ -320,10 +320,11 @@ public class Server implements ServerInterface{
     }
 
 
-    public void storeData(byte[] pass, String pKeyString, String domainString, String usernameString, Timestamp ts)throws Exception{
+    public void storeData(byte[] pass, String pKeyString, String domainString, String usernameString, Timestamp ts, byte[] writerSignature)throws Exception{
         Lock lock = new ReentrantLock();
         lock.lock();
         String elements = domainString + " " + usernameString;
+        String signature = printBase64Binary(writerSignature);
 
 
         File file = new File(DataFileLoc);
@@ -340,21 +341,25 @@ public class Server implements ServerInterface{
         int i = 0;
         Boolean newData = true;
         while ((line = br.readLine()) != null) {
-            if (line.contains(pKeyString)) {
+            if (line.equals(pKeyString)) {
                 line = br.readLine();
-                if (line.contains(domainString)) {
+                if (line.equals(domainString)) {
                     line = br.readLine();
-                    if (line.contains(usernameString)) {
+                    if (line.equals(usernameString)) {
                         writeByteCode(pass, Integer.parseInt(br.readLine()));
                         newData = false;
+                        lines.remove(i+5);
                         lines.remove(i+4);
                         lines.add(i+4, ts.toString());
+                        lines.add(i+5, signature);
                         break;
                     } else {
                         br.readLine();
                         br.readLine();
+                        br.readLine();
                     }
                 } else {
+                    br.readLine();
                     br.readLine();
                     br.readLine();
                     br.readLine();
@@ -364,12 +369,13 @@ public class Server implements ServerInterface{
                 br.readLine();
                 br.readLine();
                 br.readLine();
+                br.readLine();
             }
-            i += 5;
+            i += 6;
         }
         if (newData) {
             Files.write(Paths.get(DataFileLoc),
-                    (pKeyString + "\n" + domainString + "\n" + usernameString + "\n" + (getLastNumber()+1) + "\n" + ts + "\n").getBytes(),
+                    (pKeyString + "\n" + domainString + "\n" + usernameString + "\n" + (getLastNumber()+1) + "\n" + ts + "\n" + signature + "\n").getBytes(),
                     StandardOpenOption.APPEND);
             writeByteCode(pass, -1);
         } else {
@@ -420,7 +426,7 @@ public class Server implements ServerInterface{
         return 1;
     }
 
-    public void savePassword(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int id)throws Exception{
+    public void savePassword(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int id, byte[] writerSignature)throws Exception{
 
         byte[] pKeyBytes = null;
         byte[] restMsg = null;
@@ -470,7 +476,7 @@ public class Server implements ServerInterface{
         String domainString = domFinal;
         String usernameString = usrFinal;
 
-        storeData(pass,pKeyString,domainString,usernameString, ts);
+        storeData(pass,pKeyString,domainString,usernameString, ts, writerSignature);
 
 
     }
@@ -481,7 +487,7 @@ public class Server implements ServerInterface{
                 if(c.id == id) {
                     c.myReg.write(message, signature, nonce, signatureNonce, id);
                     if(portList.size() == 0){
-                        savePassword(message,signature,nonce,signatureNonce, c.myReg.wts, id);
+                        savePassword(message,signature,nonce,signatureNonce, c.myReg.wts, id, makeServerDigitalSignature(message));
                     }
                 }
             }
@@ -540,11 +546,11 @@ public class Server implements ServerInterface{
             int i=0;
             Boolean newData = true;
             while((line = br.readLine()) != null){
-                if(line.contains(pKeyString)){
+                if(line.equals(pKeyString)){
                     line = br.readLine();
-                    if (line.contains(domainString)) {
+                    if (line.equals(domainString)) {
                         line = br.readLine();
-                        if (line.contains(usernameString)){
+                        if (line.equals(usernameString)){
                             line = br.readLine();
                             line = br.readLine();
                             return Timestamp.valueOf(line);
@@ -552,9 +558,11 @@ public class Server implements ServerInterface{
                         else{
                             br.readLine();
                             br.readLine();
+                            br.readLine();
                         }
                     }
                     else{
+                        br.readLine();
                         br.readLine();
                         br.readLine();
                         br.readLine();
@@ -565,8 +573,9 @@ public class Server implements ServerInterface{
                     br.readLine();
                     br.readLine();
                     br.readLine();
+                    br.readLine();
                 }
-                i+=5;
+                i+=6;
             }
 
         }
@@ -594,6 +603,7 @@ public class Server implements ServerInterface{
                     line = br.readLine();
                 }
                 number = Integer.parseInt(br.readLine());
+                br.readLine();
                 br.readLine();
             }
 
@@ -643,6 +653,18 @@ public class Server implements ServerInterface{
         // and sign the plaintext with the private key
         Signature sig = Signature.getInstance("SHA256WithRSA");
         sig.initSign(privateKey);
+        sig.update(bytes);
+        byte[] signature = sig.sign();
+
+        return signature;
+    }
+
+    public static byte[] makeServerDigitalSignature(byte[] bytes) throws Exception {
+
+        // get a signature object using the SHA-1 and RSA combo
+        // and sign the plaintext with the private key
+        Signature sig = Signature.getInstance("SHA256WithRSA");
+        sig.initSign((PrivateKey)ServerPrivateKey);
         sig.update(bytes);
         byte[] signature = sig.sign();
 
@@ -828,11 +850,11 @@ public class Server implements ServerInterface{
             int i=0;
             Boolean newData = true;
             while((line = br.readLine()) != null){
-                if(line.contains(pKeyString)){
+                if(line.equals(pKeyString)){
                     line = br.readLine();
-                    if (line.contains(domainString)) {
+                    if (line.equals(domainString)) {
                         line = br.readLine();
-                        if (line.contains(usernameString)){
+                        if (line.equals(usernameString)){
                             line = br.readLine();
                             //System.out.println(line);
                             //System.out.println(parseBase64Binary(line));
