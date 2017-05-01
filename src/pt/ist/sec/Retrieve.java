@@ -75,7 +75,7 @@ public class Retrieve {
 
                     }
                     catch(Exception a){
-                        System.out.println("Error retrieving\n\t" + a);
+                        PasswordLabel.setText("Password will show here");
                         final JFrame frame = new JFrame("ErrorMessage");
                         frame.setContentPane(new ErrorMessage("Couldn't find password!", frame).panel1);
                         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

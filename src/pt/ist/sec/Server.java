@@ -160,16 +160,17 @@ public class Server implements ServerInterface{
             if(c.id == id) {
                 byte[] password = getPass(message,signature,nonce,signatureNonce);
                 Timestamp ts = getTimetamp(message,signature,nonce,signatureNonce);
+                byte[] serverSignature = getServerSignature(message);
+                c.myReg.targetReadDeliver(password,ts,rid,port,id, serverSignature);
                 c.getNextNonce();
-                c.myReg.targetReadDeliver(password,ts,rid,port,id);
             }
         }
     }
 
-    public void sendValue(int rid, int id, byte[] password, Timestamp ts)throws Exception{
+    public void sendValue(int rid, int id, byte[] password, Timestamp ts,byte[] serverSignature)throws Exception{
         for(ClientClass c : clientList) {
             if(c.id == id) {
-                c.myReg.deliverRead(rid, password, ts);
+                c.myReg.deliverRead(rid, password, ts, serverSignature);
             }
         }
     }
@@ -588,6 +589,99 @@ public class Server implements ServerInterface{
         return null;
     }
 
+    public byte[] getServerSignature(byte[] message){
+
+        byte[] pKeyBytes = null;
+        ClientClass client = clientList.get(0);
+        byte[] restMsg = null;
+        for(ClientClass element: clientList) {
+
+
+
+            try {
+                byte[] Bmsg = DecryptCommunication(message, element.getSessionKey());
+                pKeyBytes = copyOfRange(Bmsg,0,294); // parte da chave publica
+                restMsg = copyOfRange(Bmsg, 294, Bmsg.length); // resto dos argumentos
+                client = element;
+
+            }
+            catch(Throwable e){
+
+            }
+        }
+        if(pKeyBytes == null){return null;}
+
+        try {
+            String dom = new String(copyOfRange(restMsg, 0, 30), "ASCII");
+            String usr = new String(copyOfRange(restMsg, 30, restMsg.length), "ASCII");
+            String domFinal = rmPadd(dom.toCharArray());
+            String usrFinal = rmPadd(usr.toCharArray());
+
+
+            String pKeyString = printBase64Binary(pKeyBytes);
+            String domainString = domFinal;
+            String usernameString = usrFinal;
+
+            //String elements = domainString+" "+usernameString;
+
+
+            File file = new File(DataFileLoc);
+            FileReader fileReader = new FileReader(file);
+            BufferedReader br = new BufferedReader(fileReader);
+            String line;
+            Path path = Paths.get(DataFileLoc);
+
+            Charset charset = Charset.forName("ISO-8859-1");
+
+            List<String> lines = Files.readAllLines(path,charset);
+
+            int i=0;
+            Boolean newData = true;
+            while((line = br.readLine()) != null){
+                if(line.equals(pKeyString)){
+                    line = br.readLine();
+                    if (line.equals(domainString)) {
+                        line = br.readLine();
+                        if (line.equals(usernameString)){
+                            line = br.readLine();
+                            line = br.readLine();
+                            line = br.readLine();
+                            return parseBase64Binary(line);
+                        }
+                        else{
+                            br.readLine();
+                            br.readLine();
+                            br.readLine();
+                        }
+                    }
+                    else{
+                        br.readLine();
+                        br.readLine();
+                        br.readLine();
+                        br.readLine();
+                    }
+                }
+                else{
+                    br.readLine();
+                    br.readLine();
+                    br.readLine();
+                    br.readLine();
+                    br.readLine();
+                }
+                i+=6;
+            }
+
+        }
+        catch (Exception e){
+            System.out.println("Error: Couldn't locate the file.");
+            e.printStackTrace();
+            return null;
+        }
+
+        return null;
+    }
+
+
     private int getLastNumber(){
 
         int number = -1;
@@ -688,6 +782,21 @@ public class Server implements ServerInterface{
         }
     }
 
+    public static boolean verifyServerDigitalSignature(byte[] signature, byte[] message) throws Exception {
+
+        // verify the signature with the public key
+        Signature sig = Signature.getInstance("SHA256WithRSA");
+
+        sig.initVerify(ServerPublicKey);
+
+        sig.update(message);
+        try {
+            return sig.verify(signature);
+        } catch (SignatureException se) {
+            System.out.println("Caught exception while verifying " + se);
+            return false;
+        }
+    }
 
     public byte[] getDigitalSignature(byte[] PublicKey){
 
@@ -778,6 +887,28 @@ public class Server implements ServerInterface{
         return retrievePassword(message, password);
     }
 
+    public byte[] divideMessage(byte[] message) {
+
+        byte[] pKeyBytes = null;
+        ClientClass client = clientList.get(0);
+        byte[] restMsg = null;
+        for (ClientClass element : clientList) {
+
+
+            try {
+                byte[] Bmsg = DecryptCommunication(message, element.getSessionKey());
+                pKeyBytes = copyOfRange(Bmsg, 0, 294); // parte da chave publica
+                restMsg = copyOfRange(Bmsg, 294, Bmsg.length); // resto dos argumentos
+                client = element;
+
+            } catch (Throwable e) {
+
+            }
+        }
+
+        return copyOfRange(restMsg, 60, restMsg.length);
+    }
+
     public byte[] getPass( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce){
 
         byte[] pKeyBytes = null;
@@ -863,9 +994,11 @@ public class Server implements ServerInterface{
                         else{
                             br.readLine();
                             br.readLine();
+                            br.readLine();
                         }
                     }
                     else{
+                        br.readLine();
                         br.readLine();
                         br.readLine();
                         br.readLine();
@@ -876,8 +1009,9 @@ public class Server implements ServerInterface{
                     br.readLine();
                     br.readLine();
                     br.readLine();
+                    br.readLine();
                 }
-                i+=5;
+                i+=6;
             }
 
         }
@@ -892,7 +1026,6 @@ public class Server implements ServerInterface{
 
 
     public void register(byte[] pubKey, ClientInterface c) throws Exception{
-
 
         SecretKey SessKey = generateSession();
 

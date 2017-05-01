@@ -20,5 +20,5 @@ public interface ServerInterface extends Remote{
     void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, java.sql.Timestamp wts, int port, int id, byte[] writerSignature) throws Exception;
     void readReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int rid, int port, int id) throws Exception;
     void ackReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id) throws Exception;
-    void sendValue( int rid, int id, byte[] password, Timestamp ts)throws Exception;
+    void sendValue( int rid, int id, byte[] password, Timestamp ts, byte[] serverSignature)throws Exception;
 }

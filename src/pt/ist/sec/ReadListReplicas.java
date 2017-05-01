@@ -8,9 +8,11 @@ public class ReadListReplicas {
 
    public byte[] password;
    public Timestamp ts;
+   public byte[] serverSignature;
 
-   public ReadListReplicas(byte[] password, Timestamp ts){
+   public ReadListReplicas(byte[] password, Timestamp ts, byte[] serverSignature){
       this.password = password;
       this.ts = ts;
+      this.serverSignature = serverSignature;
    }
 }

@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static javax.xml.bind.DatatypeConverter.printBase64Binary;
+
 public class SharedMemoryRegister extends Server {
 
     ReadListReplicas value;
@@ -37,8 +39,9 @@ public class SharedMemoryRegister extends Server {
 
     public void write(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) throws Exception {
         wts = new Timestamp(System.currentTimeMillis());
-        acks = 0;
-        writerSignature = makeServerDigitalSignature(message);
+        acks = 1;
+        byte[] pass = divideMessage(message);
+        writerSignature = makeServerDigitalSignature(pass);
         broadcastWrite(message, signature, nonce, signatureNonce, wts , id, writerSignature);
     }
 
@@ -75,9 +78,9 @@ public class SharedMemoryRegister extends Server {
     }
     public void deliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id) throws Exception
     {
-        if(ts.equals(this.wts)){
+       if(ts.equals(this.wts)){
             acks++;
-            if(acks > portList.size()/2 || portList.size() == 1){
+            if(acks > Math.ceil((int)(portList.size()+1)/2)){
                 acks = 0;
                 savePassword(message, signature, nonce, signatureNonce, ts, id, writerSignature);
                 writerSignature = null;
@@ -89,9 +92,11 @@ public class SharedMemoryRegister extends Server {
     public void read( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int port, int id){
         rid++;
         readList = new ArrayList<>();
+        value = null;
         byte[]readerPassword = getPass(message,signature,nonce,signatureNonce); //Para adicionar o seu valor da password na readlist para efeitos de posterior comparação
         Timestamp ts = getTimetamp(message,signature,nonce,signatureNonce);
-        ReadListReplicas value = new ReadListReplicas(readerPassword, ts);
+        byte[] serverSignature = getServerSignature(message);
+        ReadListReplicas value = new ReadListReplicas(readerPassword, ts, serverSignature);
         readList.add(value);
         broadcatRead(message, signature, nonce, signatureNonce,rid, port, id);
     }
@@ -106,35 +111,45 @@ public class SharedMemoryRegister extends Server {
         }
     }
 
-    public void targetReadDeliver( byte[] password, Timestamp ts, int rid, int port, int id)throws Exception{
+    public void targetReadDeliver( byte[] password, Timestamp ts, int rid, int port, int id, byte[] serverSignature)throws Exception{
 
-        getReplica(port).sendValue(rid, id, password, ts);
+        getReplica(port).sendValue(rid, id, password, ts, serverSignature);
     }
 
-    public void deliverRead(int rid, byte[] password, Timestamp ts){
-        if(this.rid == rid){
-            Lock lock = new ReentrantLock();
-            lock.lock();
-            ReadListReplicas newValue = new ReadListReplicas(password, ts);
-            readList.add(newValue);
-            lock.unlock();
-            if(readList.size() > portList.size()/2){
-                Timestamp currentTs = readList.get(0).ts;
-                int index = 0;
-                int indexMax = 0;
-                for (ReadListReplicas auxVal: readList){
-                    System.out.println(auxVal.ts.toString());
-                    if(currentTs.before(auxVal.ts)){
-                        currentTs=auxVal.ts;
-                        indexMax = index;
-                    }
-                    index++;
-                }
-                this.value = readList.get(indexMax);
-
-                readList = new ArrayList<>();
+    public void deliverRead(int rid, byte[] password, Timestamp ts, byte[] serverSignature)throws Exception{
+        if(this.rid == rid) {
+            boolean sign = false;
+            try {
+                sign = verifyServerDigitalSignature(serverSignature, password);
             }
+            catch (Exception e){
+                return;
+            }
+            if (sign) {
+                if (printBase64Binary(serverSignature).equals(printBase64Binary(readList.get(0).serverSignature))) {
+                    Lock lock = new ReentrantLock();
+                    lock.lock();
+                    ReadListReplicas newValue = new ReadListReplicas(password, ts, serverSignature);
+                    readList.add(newValue);
+                    lock.unlock();
+                    if (readList.size() > Math.ceil((int) (portList.size() + 1) / 2)) {
+                        Timestamp currentTs = readList.get(0).ts;
+                        int index = 0;
+                        int indexMax = 0;
+                        for (ReadListReplicas auxVal : readList) {
+                            System.out.println(auxVal.ts.toString());
+                            if (currentTs.before(auxVal.ts)) {
+                                currentTs = auxVal.ts;
+                                indexMax = index;
+                            }
+                            index++;
+                        }
+                        this.value = readList.get(indexMax);
 
+                        readList = new ArrayList<>();
+                    }
+                }
+            }
         }
     }
 
