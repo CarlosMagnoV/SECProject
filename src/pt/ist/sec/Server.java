@@ -139,39 +139,45 @@ public class Server implements ServerInterface{
         System.out.println("Cliente adicionado com ID: " + Integer.parseInt(new String(clearId)));
     }
 
-    public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int port, int id, byte[] writerSignature)throws Exception{
+    //write 2nd phase
+    public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int port, int id, byte[] writerSignature, int rid)throws Exception{
         amWriter = false;
+
         for(ClientClass c : clientList) {
             if(c.id == id) {
-                c.myReg.targetDeliver(message, signature, nonce, signatureNonce, wts, port, id, writerSignature);
+                c.myReg.targetDeliver(message, signature, nonce, signatureNonce, wts, port, id, writerSignature, rid);
+            }
+        }
+    }
+    //write 3rd phase
+    public void ackReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id, int rid) throws Exception{
+
+        for(ClientClass c : clientList) {
+            if(c.id == id) {
+                c.myReg.deliver(message, signature, nonce, signatureNonce, ts, port, id, rid);
             }
         }
     }
 
-    public void ackReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id) throws Exception{
-        for(ClientClass c : clientList) {
-            if(c.id == id) {
-                c.myReg.deliver(message, signature, nonce, signatureNonce, ts, port, id);
-            }
-        }
-    }
-
+    //read 2nd phase
     public void readReturn( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int rid, int port, int id)throws Exception{
+
         for(ClientClass c : clientList) {
             if(c.id == id) {
                 byte[] password = getPass(message,signature,nonce,signatureNonce);
                 Timestamp ts = getTimetamp(message,signature,nonce,signatureNonce);
                 byte[] serverSignature = getServerSignature(message);
-                c.myReg.targetReadDeliver(password,ts,rid,port,id, serverSignature);
+                c.myReg.targetReadDeliver(password,ts,rid,port,id, serverSignature,message,signature,nonce,signatureNonce);
                 c.getNextNonce();
             }
         }
     }
 
-    public void sendValue(int rid, int id, byte[] password, Timestamp ts,byte[] serverSignature)throws Exception{
+    //read 3rd phase
+    public void sendValue(int rid, int id, byte[] password, Timestamp ts,byte[] serverSignature,byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce)throws Exception{
         for(ClientClass c : clientList) {
             if(c.id == id) {
-                c.myReg.deliverRead(rid, password, ts, serverSignature);
+                c.myReg.deliverRead(password, ts, rid, id, serverSignature,message,signature,nonce,signatureNonce);
             }
         }
     }
