@@ -69,10 +69,15 @@ public class SharedMemoryRegister extends Server {
     public void targetDeliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id, byte[] writerSignature, int rid)throws Exception{
 
         if(getTimetamp(message,signature,nonce,signatureNonce) != null) {
-            if (ts.after(getTimetamp(message, signature, nonce, signatureNonce))) {
+            if(rid>1) { //confirma se já existe alguma informação no ficheiro
+                if (ts.after(getTimetamp(message, signature, nonce, signatureNonce))) {
+                    savePassword(message, signature, nonce, signatureNonce, ts, id, writerSignature);
+                }
+                sendAck(message, signature, nonce, signatureNonce, ts, port, id, rid);
+            }else{
                 savePassword(message, signature, nonce, signatureNonce, ts, id, writerSignature);
+                sendAck(message, signature, nonce, signatureNonce, ts, port, id, rid);
             }
-            sendAck(message, signature, nonce, signatureNonce, ts, port, id, rid);
         }
         else{
 
@@ -110,14 +115,18 @@ public class SharedMemoryRegister extends Server {
     }
 
     //read 1st phase
-    public void read( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int port, int id){
+    public void read( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int port, int id) throws Exception {
         rid++;
         reading = true;
         readList = new ArrayList<>();
         value = null;
         byte[]readerPassword = getPass(message,signature,nonce,signatureNonce); //Para adicionar o seu valor da password na readlist para efeitos de posterior comparação
         Timestamp ts = getTimetamp(message,signature,nonce,signatureNonce);
+
+        byte[] pass = divideMessage(message);
+        writerSignature = makeServerDigitalSignature(pass);
         byte[] serverSignature = getServerSignature(message);
+
         ReadListReplicas value = new ReadListReplicas(readerPassword, ts, serverSignature, message, signature, nonce, signatureNonce,id);
         readList.add(value);
         broadcatRead(message, signature, nonce, signatureNonce,rid, port, id);

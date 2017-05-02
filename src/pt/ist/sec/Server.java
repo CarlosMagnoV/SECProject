@@ -873,7 +873,7 @@ public class Server implements ServerInterface{
 
     }
 
-    public byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id){
+    public byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) throws Exception{
 
         SharedMemoryRegister obj = new SharedMemoryRegister();
 
