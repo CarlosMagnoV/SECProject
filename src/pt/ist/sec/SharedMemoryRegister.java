@@ -26,20 +26,23 @@ public class SharedMemoryRegister extends Server {
     public Timestamp wts;
     public int acks;
     private byte[] writerSignature;
+    public boolean reading;
 
     public SharedMemoryRegister() {
 
         rid = 0;
         wts = null;
-        acks = 0;
+        acks = 1;
         value = null;
         writerSignature = null;
+        reading = false;
         //timestamps = new ArrayList<>();
     }
 
     public void write(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) throws Exception {
         wts = new Timestamp(System.currentTimeMillis());
         acks = 1;
+        rid++;
         byte[] pass = divideMessage(message);
         writerSignature = makeServerDigitalSignature(pass);
         broadcastWrite(message, signature, nonce, signatureNonce, wts , id, writerSignature);
@@ -48,75 +51,90 @@ public class SharedMemoryRegister extends Server {
     public void broadcastWrite(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int id, byte[] writerSignature){
         try{
             for (int p : portList) {
-                getReplica(p).writeReturn(message, signature, nonce, signatureNonce, wts, Integer.parseInt(super.myPort), id, writerSignature);
+                getReplica(p).writeReturn(message, signature, nonce, signatureNonce, wts, Integer.parseInt(super.myPort), id, writerSignature, rid);
             }
         }catch (Exception e){
             e.printStackTrace();
         }
     }
 
-    public void targetDeliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id, byte[] writerSignature)throws Exception{
+    public void targetDeliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id, byte[] writerSignature, int rid)throws Exception{
+        Lock lock = new ReentrantLock();
+        lock.lock();
         if(getTimetamp(message,signature,nonce,signatureNonce) != null) {
             if (ts.after(getTimetamp(message, signature, nonce, signatureNonce))) {
                 savePassword(message, signature, nonce, signatureNonce, ts, id, writerSignature);
-                sendAck(message, signature, nonce, signatureNonce, ts, port, id);
             }
+            sendAck(message, signature, nonce, signatureNonce, ts, port, id,rid);
         }
         else{
             savePassword(message, signature, nonce, signatureNonce, ts, id, writerSignature);
-            sendAck(message, signature, nonce, signatureNonce, ts, port, id);
+            sendAck(message, signature, nonce, signatureNonce, ts, port, id,rid);
         }
+        lock.unlock();
     }
 
-    public void sendAck(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id) {
+    public void sendAck(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id, int rid) {
         try {
-            getReplica(port).ackReturn(message, signature, nonce, signatureNonce, ts, port, id);
+            getReplica(port).ackReturn(message, signature, nonce, signatureNonce, ts, port, id,rid);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    public void deliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id) throws Exception
+    public void deliver(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id,int rid) throws Exception
     {
-       if(ts.equals(this.wts)){
+        if(this.rid==rid) {
+
             acks++;
-            if(acks > Math.ceil((int)(portList.size()+1)/2)){
-                acks = 0;
-                savePassword(message, signature, nonce, signatureNonce, ts, id, writerSignature);
-                writerSignature = null;
+            if (acks > Math.ceil((int) (portList.size() + 1) / 2)) {
+                acks = 1;
+                if (reading) {
+                    reading = false;
+                    System.out.println("ATOMIC");
+                } else {
+                    savePassword(message, signature, nonce, signatureNonce, ts, id, writerSignature);
+                    writerSignature = null;
+                }
             }
+
         }
 
     }
 
     public void read( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int port, int id){
         rid++;
+        acks=1;
+        reading=true;
         readList = new ArrayList<>();
         value = null;
         byte[]readerPassword = getPass(message,signature,nonce,signatureNonce); //Para adicionar o seu valor da password na readlist para efeitos de posterior comparação
         Timestamp ts = getTimetamp(message,signature,nonce,signatureNonce);
+
+        //talvez o writeSig
+
         byte[] serverSignature = getServerSignature(message);
-        ReadListReplicas value = new ReadListReplicas(readerPassword, ts, serverSignature);
+        ReadListReplicas value = new ReadListReplicas(readerPassword, ts, serverSignature,message,signature,nonce,signatureNonce,id);
         readList.add(value);
-        broadcatRead(message, signature, nonce, signatureNonce,rid, port, id);
+        broadcastRead(message, signature, nonce, signatureNonce,rid, port, id);
     }
 
-    public void broadcatRead( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int rid, int port, int id){
+    public void broadcastRead( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int rid, int port, int id){
         try{
             for (int p : portList) {
                 getReplica(p).readReturn(message,signature,nonce,signatureNonce,rid, port, id);
             }
         }catch (Exception e){
-            e.printStackTrace();
+           // e.printStackTrace();
         }
     }
 
-    public void targetReadDeliver( byte[] password, Timestamp ts, int rid, int port, int id, byte[] serverSignature)throws Exception{
+    public void targetReadDeliver( byte[] password, Timestamp ts, int rid, int port, int id, byte[] serverSignature,byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce)throws Exception{
 
-        getReplica(port).sendValue(rid, id, password, ts, serverSignature);
+        getReplica(port).sendValue(rid, id, password, ts, serverSignature,message,signature,nonce,signatureNonce);
     }
 
-    public void deliverRead(int rid, byte[] password, Timestamp ts, byte[] serverSignature)throws Exception{
+    public void deliverRead(int rid, byte[] password, Timestamp ts, byte[] serverSignature,byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id)throws Exception{
         if(this.rid == rid) {
             boolean sign = false;
             try {
@@ -129,7 +147,7 @@ public class SharedMemoryRegister extends Server {
                 if (printBase64Binary(serverSignature).equals(printBase64Binary(readList.get(0).serverSignature))) {
                     Lock lock = new ReentrantLock();
                     lock.lock();
-                    ReadListReplicas newValue = new ReadListReplicas(password, ts, serverSignature);
+                    ReadListReplicas newValue = new ReadListReplicas(password, ts, serverSignature,message,signature,nonce,signatureNonce,id);
                     readList.add(newValue);
                     lock.unlock();
                     if (readList.size() > Math.ceil((int) (portList.size() + 1) / 2)) {
@@ -137,7 +155,6 @@ public class SharedMemoryRegister extends Server {
                         int index = 0;
                         int indexMax = 0;
                         for (ReadListReplicas auxVal : readList) {
-                            System.out.println(auxVal.ts.toString());
                             if (currentTs.before(auxVal.ts)) {
                                 currentTs = auxVal.ts;
                                 indexMax = index;
@@ -145,7 +162,7 @@ public class SharedMemoryRegister extends Server {
                             index++;
                         }
                         this.value = readList.get(indexMax);
-
+                        broadcastWrite(this.value.message, this.value.signature, this.value.nonce, this.value.signatureNonce, this.value.ts , this.value.id, writerSignature);
                         readList = new ArrayList<>();
                     }
                 }
