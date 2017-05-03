@@ -43,11 +43,17 @@
       <file leaf-file-name="Server.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/Server.java">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
             <state relative-caret-position="186">
               <caret line="992" column="0" lean-forward="false" selection-start-line="992" selection-start-column="0" selection-end-line="992" selection-end-column="0" />
               <folding>
                 <marker date="1493734249467" expanded="true" signature="6985:7018" ph="{...}" />
               </folding>
+=======
+            <state relative-caret-position="118">
+              <caret line="913" column="0" lean-forward="false" selection-start-line="913" selection-start-column="0" selection-end-line="913" selection-end-column="0" />
+              <folding />
+>>>>>>> parent of 49ad03f... todo
             </state>
           </provider>
         </entry>
@@ -95,8 +101,13 @@
           </provider>
         </entry>
       </file>
+<<<<<<< HEAD
       <file leaf-file-name="Lib.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/Lib.java">
+=======
+      <file leaf-file-name="ClientClass.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ClientClass.java">
+>>>>>>> parent of 49ad03f... todo
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="4326">
               <caret line="240" column="21" lean-forward="false" selection-start-line="240" selection-start-column="21" selection-end-line="240" selection-end-column="21" />
@@ -180,12 +191,20 @@
         <option value="$PROJECT_DIR$/src/pt/ist/sec/ClientClass.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/ClientInterface.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/Lib.java" />
+<<<<<<< HEAD
         <option value="$PROJECT_DIR$/src/pt/ist/sec/Retrieve.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/ReadListReplicas.java" />
         <option value="$PROJECT_DIR$/data/storage.txt" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/Server.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/ServerInterface.java" />
         <option value="$PROJECT_DIR$/src/pt/ist/sec/SharedMemoryRegister.java" />
+=======
+        <option value="$PROJECT_DIR$/src/pt/ist/sec/ServerInterface.java" />
+        <option value="$PROJECT_DIR$/src/pt/ist/sec/ReadListReplicas.java" />
+        <option value="$PROJECT_DIR$/src/pt/ist/sec/Server.java" />
+        <option value="$PROJECT_DIR$/src/pt/ist/sec/SharedMemoryRegister.java" />
+        <option value="$PROJECT_DIR$/src/pt/ist/sec/Retrieve.java" />
+>>>>>>> parent of 49ad03f... todo
       </list>
     </option>
   </component>
@@ -521,7 +540,11 @@
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <option name="MAIN_CLASS_NAME" value="pt.ist.sec.ClientUI" />
       <option name="VM_PARAMETERS" value="" />
+<<<<<<< HEAD
       <option name="PROGRAM_PARAMETERS" value="3333" />
+=======
+      <option name="PROGRAM_PARAMETERS" value="3003" />
+>>>>>>> parent of 49ad03f... todo
       <option name="WORKING_DIRECTORY" value="" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
@@ -582,21 +605,16 @@
     </task>
     <servers />
   </component>
-  <component name="TodoView">
-    <todo-panel id="selected-file">
-      <is-autoscroll-to-source value="true" />
-    </todo-panel>
-    <todo-panel id="all">
-      <are-packages-shown value="true" />
-      <is-autoscroll-to-source value="true" />
-    </todo-panel>
-  </component>
   <component name="ToolWindowManager">
     <frame x="-9" y="-9" width="1938" height="1048" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+<<<<<<< HEAD
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32842582" sideWeight="0.5" order="13" side_tool="false" content_ui="tabs" />
+=======
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="13" side_tool="false" content_ui="tabs" />
+>>>>>>> parent of 49ad03f... todo
       <window_info id="Nl-Palette" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31400967" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -610,13 +628,21 @@
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32919255" sideWeight="0.5" order="16" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+<<<<<<< HEAD
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18152525" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+=======
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21709532" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+>>>>>>> parent of 49ad03f... todo
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24962178" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29898074" sideWeight="0.49546143" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="true" content_ui="tabs" />
+<<<<<<< HEAD
+=======
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.29951692" sideWeight="0.49546143" order="5" side_tool="false" content_ui="tabs" />
+>>>>>>> parent of 49ad03f... todo
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -673,19 +699,31 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/pt/ist/sec/Server.java</url>
+<<<<<<< HEAD
           <line>491</line>
+=======
+          <line>470</line>
+>>>>>>> parent of 49ad03f... todo
           <properties />
           <option name="timeStamp" value="222" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/pt/ist/sec/Server.java</url>
+<<<<<<< HEAD
           <line>1055</line>
+=======
+          <line>886</line>
+>>>>>>> parent of 49ad03f... todo
           <properties />
           <option name="timeStamp" value="224" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/pt/ist/sec/Server.java</url>
+<<<<<<< HEAD
           <line>992</line>
+=======
+          <line>825</line>
+>>>>>>> parent of 49ad03f... todo
           <properties />
           <option name="timeStamp" value="225" />
         </line-breakpoint>
@@ -708,8 +746,19 @@
           <option name="timeStamp" value="251" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
+<<<<<<< HEAD
           <url>file://$PROJECT_DIR$/src/pt/ist/sec/SharedMemoryRegister.java</url>
           <line>162</line>
+=======
+          <url>file://$PROJECT_DIR$/src/pt/ist/sec/Server.java</url>
+          <line>870</line>
+          <properties />
+          <option name="timeStamp" value="230" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/pt/ist/sec/Server.java</url>
+          <line>913</line>
+>>>>>>> parent of 49ad03f... todo
           <properties />
           <option name="timeStamp" value="252" />
         </line-breakpoint>
@@ -845,7 +894,19 @@
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ClientClass.java">
+=======
+    <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/Server.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="118">
+          <caret line="913" column="0" lean-forward="false" selection-start-line="913" selection-start-column="0" selection-end-line="913" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/SharedMemoryRegister.java">
+>>>>>>> parent of 49ad03f... todo
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1029">
           <caret line="61" column="0" lean-forward="false" selection-start-line="61" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
@@ -871,6 +932,7 @@
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/src/pt/ist/sec/ReadListReplicas.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="378">
@@ -890,6 +952,8 @@
         </state>
       </provider>
     </entry>
+=======
+>>>>>>> parent of 49ad03f... todo
   </component>
   <component name="masterDetails">
     <states>

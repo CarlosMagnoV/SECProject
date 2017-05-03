@@ -45,7 +45,6 @@ import static javax.xml.bind.DatatypeConverter.*;
 
 public class Server implements ServerInterface{
 
-
     private static String DataFileLoc = System.getProperty("user.dir") + "/data/storage.txt";
     private static String LogFile = System.getProperty("user.dir") + "/log/log.txt";
     private static String SignFile = System.getProperty("user.dir") + "/log/signatures.txt";
@@ -64,7 +63,7 @@ public class Server implements ServerInterface{
     public static ArrayList<Integer> portList = new ArrayList<>();
     public static SharedMemoryRegister reg;
     private static ServerInterface server;
-    public static int totalId = 0; //TODO propagar pelas replicas
+    public static int totalId = 0;
 
     public Server(){
 
