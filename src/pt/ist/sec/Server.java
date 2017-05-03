@@ -45,7 +45,6 @@ import static javax.xml.bind.DatatypeConverter.*;
 
 public class Server implements ServerInterface{
 
-
     private static String DataFileLoc = System.getProperty("user.dir") + "/data/storage.txt";
     private static String LogFile = System.getProperty("user.dir") + "/log/log.txt";
     private static String SignFile = System.getProperty("user.dir") + "/log/signatures.txt";
@@ -64,7 +63,7 @@ public class Server implements ServerInterface{
     public static ArrayList<Integer> portList = new ArrayList<>();
     public static SharedMemoryRegister reg;
     private static ServerInterface server;
-    public static int totalId = 0; //TODO propagar pelas replicas
+    public static int totalId = 0;
 
     public Server(){
 
@@ -139,24 +138,43 @@ public class Server implements ServerInterface{
         System.out.println("Cliente adicionado com ID: " + Integer.parseInt(new String(clearId)));
     }
 
+<<<<<<< HEAD
+=======
+    //write 2nd phase
+>>>>>>> origin/master
     public void writeReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp wts, int port, int id, byte[] writerSignature, int rid)throws Exception{
         amWriter = false;
+
         for(ClientClass c : clientList) {
             if(c.id == id) {
+<<<<<<< HEAD
                 c.myReg.targetDeliver(message, signature, nonce, signatureNonce, wts, port, id, writerSignature,rid);
+=======
+                c.myReg.targetDeliver(message, signature, nonce, signatureNonce, wts, port, id, writerSignature, rid);
+>>>>>>> origin/master
             }
         }
     }
+    //write 3rd phase
+    public void ackReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id, int rid) throws Exception{
 
+<<<<<<< HEAD
     public void ackReturn(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, Timestamp ts, int port, int id, int rid) throws Exception{
         for(ClientClass c : clientList) {
             if(c.id == id) {
                 c.myReg.deliver(message, signature, nonce, signatureNonce, ts, port, id,rid);
+=======
+        for(ClientClass c : clientList) {
+            if(c.id == id) {
+                c.myReg.deliver(message, signature, nonce, signatureNonce, ts, port, id, rid);
+>>>>>>> origin/master
             }
         }
     }
 
+    //read 2nd phase
     public void readReturn( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int rid, int port, int id)throws Exception{
+
         for(ClientClass c : clientList) {
             if(c.id == id) {
                 byte[] password = getPass(message,signature,nonce,signatureNonce);
@@ -168,10 +186,18 @@ public class Server implements ServerInterface{
         }
     }
 
+<<<<<<< HEAD
     public void sendValue(int rid, int id, byte[] password, Timestamp ts,byte[] serverSignature,byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce)throws Exception{
         for(ClientClass c : clientList) {
             if(c.id == id) {
                 c.myReg.deliverRead(rid, password, ts, serverSignature,message,signature,nonce,signatureNonce,id);
+=======
+    //read 3rd phase
+    public void sendValue(int rid, int id, byte[] password, Timestamp ts,byte[] serverSignature,byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce)throws Exception{
+        for(ClientClass c : clientList) {
+            if(c.id == id) {
+                c.myReg.deliverRead(password, ts, rid, id, serverSignature,message,signature,nonce,signatureNonce);
+>>>>>>> origin/master
             }
         }
     }
@@ -867,7 +893,7 @@ public class Server implements ServerInterface{
 
     }
 
-    public byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id){
+    public byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) throws Exception{
 
         SharedMemoryRegister obj = new SharedMemoryRegister();
 

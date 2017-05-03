@@ -12,7 +12,7 @@ public interface ServerInterface extends Remote{
 
     int checkConnection() throws RemoteException;
     void put(byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) throws Exception;
-    byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) throws RemoteException;
+    byte[] get( byte[] message, byte[] signature, byte[] nonce, byte[] signatureNonce, int id) throws Exception;
     byte[] getDigitalSignature(byte[] PublicKey) throws Exception;
     void register(byte[] pubKey, ClientInterface c) throws Exception;
     void registerDeliver(byte[] sessKey, PublicKey pKey, byte[] id, int nonce)throws Exception;
